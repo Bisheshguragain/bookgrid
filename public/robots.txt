@@ -1,0 +1,29 @@
+# BookGrid - robots.txt
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+
+# Disallow crawling of protected/dynamic routes
+Disallow: /app/
+Disallow: /u/
+Disallow: /book/
+Disallow: /reschedule/
+Disallow: /cancel/
+Disallow: /database-test
+
+# Disallow sensitive files
+Disallow: /.env
+Disallow: /*.json$
+Disallow: /src/
+
+# Crawl-delay to prevent excessive requests
+Crawl-delay: 1
+
+# Sitemap (add when you have one)
+# Sitemap: https://bookgrid.com/sitemap.xml

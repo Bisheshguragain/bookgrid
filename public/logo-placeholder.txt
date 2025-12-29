@@ -1,0 +1,1 @@
+/* Logo will be placed here - download the attached logo image and save it as /public/bookgrid-logo.png */
