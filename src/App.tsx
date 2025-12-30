@@ -37,6 +37,7 @@ import { Contact } from './pages/Contact';
 import { HelpCenter } from './pages/HelpCenter';
 import { About } from './pages/About';
 import { Blog } from './pages/Blog';
+import { Contacts } from './pages/Contacts';
 
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -166,6 +167,7 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="reminders" element={<Reminders />} />
           <Route path="database-test" element={<DatabaseTest />} />
+          <Route path="contacts" element={<Contacts />} />
         </Route>
 
         {/* Public booking routes (no auth required) */}

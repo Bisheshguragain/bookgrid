@@ -58,7 +58,13 @@ export function Cancel() {
 
     setCancelLoading(true);
     try {
-      // Update booking status to cancelled
+      // ============================================
+      // CANCEL BOOKING: Update status to 'cancelled'
+      // This automatically releases the time slot:
+      // - The slot becomes available for other users
+      // - Our availability logic excludes cancelled bookings
+      // - No additional action needed to "free" the slot
+      // ============================================
       const { data: cancelledBooking, error: updateError } = await supabase
         .from('bookings')
         .update({

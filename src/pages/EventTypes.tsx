@@ -4,11 +4,16 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import type { EventType } from '../lib/database.types';
 import { generateBookingUrl, generateEmbedCode } from '../utils/datetime';
+import { BookAMeet } from './BookAMeet';
+
+// Tab types for the Event Types page
+type EventTypesTab = 'my-events' | 'book-a-meet';
 
 export function EventTypes() {
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<EventTypesTab>('my-events');
 
   const { user } = useAuthStore();
 
@@ -107,20 +112,59 @@ export function EventTypes() {
               Create and manage your available event types
             </p>
           </div>
-          <Link
-            to="/app/event-types/new"
-            className="px-6 py-3 bg-white text-purple-700 font-bold rounded-xl hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+          {activeTab === 'my-events' && (
+            <Link
+              to="/app/event-types/new"
+              className="px-6 py-3 bg-white text-purple-700 font-bold rounded-xl hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Event Type
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs Navigation */}
+      <div className="bg-white rounded-xl shadow-lg border-2 border-purple-100 p-2">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab('my-events')}
+            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'my-events'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            My Event Types
+          </button>
+          <button
+            onClick={() => setActiveTab('book-a-meet')}
+            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'book-a-meet'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+            }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Create Event Type
-          </Link>
+            Book a Meet
+          </button>
         </div>
       </div>
 
-      {/* Event Types Grid */}
-      {eventTypes.length === 0 ? (
+      {/* Tab Content */}
+      {activeTab === 'book-a-meet' ? (
+        <BookAMeet />
+      ) : (
+        <>
+          {/* Event Types Grid */}
+          {eventTypes.length === 0 ? (
         <div className="bg-white rounded-xl p-16 text-center shadow-lg border-2 border-purple-100">
           <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
             <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,6 +305,8 @@ export function EventTypes() {
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   );

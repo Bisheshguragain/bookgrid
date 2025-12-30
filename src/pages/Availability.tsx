@@ -617,8 +617,9 @@ export function Availability() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
         {rulesByDay.map(({ dayIndex, dayName, rules }) => (
           <div key={dayIndex} className="bg-white rounded-xl p-4 sm:p-5 shadow-lg border-2 border-purple-100">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-3">
-              <h3 className="font-bold text-purple-900 text-base sm:text-lg">{dayName}</h3>
+            {/* Header - horizontal on tablet, stacked/centered on mobile and desktop (7-col) */}
+            <div className="flex flex-col sm:flex-row xl:flex-col items-center sm:items-center sm:justify-between xl:justify-start gap-2 mb-3">
+              <h3 className="font-bold text-purple-900 text-base sm:text-lg text-center sm:text-left xl:text-center">{dayName}</h3>
               {rules.length > 0 && (
                 <button
                   onClick={() => copyScheduleToAllDays(dayIndex)}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, addMonths, subMonths, isBefore } from 'date-fns';
 import type { BookingWithEventType } from '../lib/database.types';
 
 export function CalendarView() {
@@ -9,6 +9,8 @@ export function CalendarView() {
   const [bookings, setBookings] = useState<BookingWithEventType[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [editingBooking, setEditingBooking] = useState<BookingWithEventType | null>(null);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -42,6 +44,107 @@ export function CalendarView() {
 
     loadBookings();
   }, [user, currentDate]);
+
+  // ============================================
+  // BOOKING ACTIONS: Cancel & Reschedule
+  // ============================================
+  
+  /**
+   * Cancel a booking (host action)
+   * This releases the time slot for other users
+   */
+  const handleCancelBooking = async (booking: BookingWithEventType) => {
+    const confirmMessage = `Are you sure you want to cancel the booking with ${booking.guest_name}?\n\nThis will:\n• Free up the time slot\n• Notify the guest via email`;
+    
+    if (!window.confirm(confirmMessage)) return;
+    
+    setActionLoading(booking.id);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          status: 'cancelled',
+          notes: booking.notes 
+            ? `${booking.notes}\n\n[Cancelled by host on ${new Date().toLocaleDateString()}]`
+            : `[Cancelled by host on ${new Date().toLocaleDateString()}]`,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', booking.id)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBookings(prev => prev.map(b => 
+        b.id === booking.id 
+          ? { ...b, status: 'cancelled' as const }
+          : b
+      ));
+
+      alert(`✅ Booking with ${booking.guest_name} has been cancelled. The time slot is now available.`);
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      alert('❌ Failed to cancel booking. Please try again.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /**
+   * Open reschedule modal for editing booking time
+   */
+  const handleRescheduleBooking = (booking: BookingWithEventType) => {
+    setEditingBooking(booking);
+  };
+
+  /**
+   * Update booking with new time
+   */
+  const handleUpdateBookingTime = async (bookingId: string, newStartTime: Date) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    const duration = booking.event_types.duration;
+    const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+
+    setActionLoading(bookingId);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          start_time: newStartTime.toISOString(),
+          end_time: newEndTime.toISOString(),
+          status: 'confirmed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', bookingId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBookings(prev => prev.map(b => 
+        b.id === bookingId 
+          ? { ...b, start_time: newStartTime.toISOString(), end_time: newEndTime.toISOString(), status: 'confirmed' as const }
+          : b
+      ));
+
+      setEditingBooking(null);
+      alert('✅ Booking time updated successfully!');
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      alert('❌ Failed to update booking. The time slot may be taken.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  /**
+   * Check if booking can be modified (is in the future)
+   */
+  const canModifyBooking = (booking: BookingWithEventType): boolean => {
+    return isBefore(new Date(), new Date(booking.start_time)) && booking.status === 'confirmed';
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -232,7 +335,7 @@ export function CalendarView() {
                               }`}
                             >
                               {booking.status === 'confirmed' ? '✓ Confirmed' : 
-                               booking.status === 'cancelled' ? '✗ Cancelled' : '⏳ Pending'}
+                               booking.status === 'cancelled' ? '✗ Cancelled' : '⏳ Rescheduled'}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 font-medium">
@@ -248,6 +351,45 @@ export function CalendarView() {
                           {booking.notes && (
                             <p className="text-sm text-gray-600 mt-2 p-3 bg-purple-50 rounded-lg">
                               <strong>📝 Notes:</strong> {booking.notes}
+                            </p>
+                          )}
+                          
+                          {/* ============================================ */}
+                          {/* ACTION BUTTONS: Cancel & Reschedule */}
+                          {/* ============================================ */}
+                          {canModifyBooking(booking) && (
+                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+                              <button
+                                onClick={() => handleRescheduleBooking(booking)}
+                                disabled={actionLoading === booking.id}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Reschedule
+                              </button>
+                              <button
+                                onClick={() => handleCancelBooking(booking)}
+                                disabled={actionLoading === booking.id}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                              >
+                                {actionLoading === booking.id ? (
+                                  <div className="w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin"></div>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                )}
+                                Cancel Booking
+                              </button>
+                            </div>
+                          )}
+                          
+                          {/* Show message for past/cancelled bookings */}
+                          {!canModifyBooking(booking) && booking.status === 'confirmed' && (
+                            <p className="text-xs text-gray-400 mt-3 italic">
+                              ⏰ This booking has already passed
                             </p>
                           )}
                         </div>
@@ -280,6 +422,111 @@ export function CalendarView() {
           </p>
         </div>
       </div>
+
+      {/* ============================================ */}
+      {/* RESCHEDULE MODAL */}
+      {/* ============================================ */}
+      {editingBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">📅 Reschedule Booking</h2>
+                <button
+                  onClick={() => setEditingBooking(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Current booking info */}
+              <div className="bg-purple-50 rounded-xl p-4 mb-6">
+                <p className="text-sm font-medium text-purple-900 mb-2">Current Booking:</p>
+                <p className="text-sm text-purple-700">
+                  <strong>{editingBooking.guest_name}</strong> - {editingBooking.event_types.title}
+                </p>
+                <p className="text-sm text-purple-600">
+                  {format(new Date(editingBooking.start_time), 'EEEE, MMMM d, yyyy')} at{' '}
+                  {format(new Date(editingBooking.start_time), 'h:mm a')}
+                </p>
+              </div>
+              
+              {/* New time selection */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    New Date
+                  </label>
+                  <input
+                    type="date"
+                    id="reschedule-date"
+                    min={format(new Date(), 'yyyy-MM-dd')}
+                    defaultValue={format(new Date(editingBooking.start_time), 'yyyy-MM-dd')}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    New Time
+                  </label>
+                  <input
+                    type="time"
+                    id="reschedule-time"
+                    defaultValue={format(new Date(editingBooking.start_time), 'HH:mm')}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+              </div>
+              
+              {/* Action buttons */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setEditingBooking(null)}
+                  className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const dateInput = document.getElementById('reschedule-date') as HTMLInputElement;
+                    const timeInput = document.getElementById('reschedule-time') as HTMLInputElement;
+                    if (dateInput && timeInput) {
+                      const newDateTime = new Date(`${dateInput.value}T${timeInput.value}`);
+                      if (newDateTime > new Date()) {
+                        handleUpdateBookingTime(editingBooking.id, newDateTime);
+                      } else {
+                        alert('Please select a future date and time');
+                      }
+                    }
+                  }}
+                  disabled={actionLoading === editingBooking.id}
+                  className="flex-1 px-4 py-3 text-white bg-purple-600 hover:bg-purple-700 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {actionLoading === editingBooking.id ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Update Booking
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

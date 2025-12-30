@@ -43,9 +43,9 @@ export function Header() {
   const navigation = [
     { name: 'Dashboard', href: '/app/dashboard' },
     { name: 'Event Types', href: '/app/event-types' },
-    { name: 'Book a Meet', href: '/app/book-a-meet' },
     { name: 'Calendar', href: '/app/calendar' },
     { name: 'Availability', href: '/app/availability' },
+    { name: 'Contacts', href: '/app/contacts' },
     { name: 'Analytics', href: '/app/analytics' },
   ];
 

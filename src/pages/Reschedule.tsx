@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { formatInTimeZone } from 'date-fns-tz';
 import { SlotSelection } from '../components/booking/SlotSelection';
 import { sendRescheduleConfirmation } from '../services/emailService';
+import { rescheduleBooking, checkSlotAvailability } from '../services/bookingService';
 import type { Database } from '../lib/database.types';
 
 type Booking = Database['public']['Tables']['bookings']['Row'];
@@ -64,28 +65,46 @@ export function Reschedule() {
   };
 
   const handleReschedule = async (newSlot: string) => {
-    if (!booking || !eventType) return;
+    if (!booking || !eventType || !token) return;
 
     try {
       const startTime = new Date(newSlot);
       const endTime = new Date(startTime.getTime() + eventType.duration * 60000);
 
-      // Update booking with new time
-      const { data: updatedBooking, error: updateError } = await supabase
-        .from('bookings')
-        .update({
-          start_time: startTime.toISOString(),
-          end_time: endTime.toISOString(),
-          status: 'rescheduled',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', booking.id)
-        .eq('reschedule_token', token!)
-        .select()
-        .single();
+      // ============================================
+      // DOUBLE-BOOKING PREVENTION: Check slot availability
+      // Exclude current booking from the check (it's being moved)
+      // ============================================
+      const slotCheck = await checkSlotAvailability(
+        eventType.user_id,
+        eventType.id,
+        startTime,
+        endTime,
+        booking.id // Exclude current booking from conflict check
+      );
 
-      if (updateError) throw updateError;
-      if (!updatedBooking) throw new Error('Failed to update booking');
+      if (!slotCheck.available) {
+        setError(slotCheck.reason || 'This time slot is no longer available. Please select another time.');
+        setStep('slot-selection');
+        return;
+      }
+
+      // ============================================
+      // RESCHEDULE: Use the booking service
+      // The old slot is automatically released when we update to the new time
+      // ============================================
+      const result = await rescheduleBooking(
+        booking.id,
+        token,
+        startTime,
+        endTime
+      );
+
+      if (!result.success || !result.booking) {
+        setError(result.error || 'Failed to reschedule. Please try again.');
+        setStep('slot-selection');
+        return;
+      }
 
       // Get host information to send email
       const { data: hostData } = await supabase
@@ -98,7 +117,7 @@ export function Reschedule() {
         // Send reschedule confirmation email
         await sendRescheduleConfirmation(
           booking,
-          updatedBooking,
+          result.booking,
           eventType,
           booking.guest_email,
           booking.guest_name,
@@ -212,6 +231,8 @@ export function Reschedule() {
                   <SlotSelection
                     duration={eventType.duration}
                     timezone={booking.guest_time_zone}
+                    userId={eventType.user_id}
+                    eventTypeId={eventType.id}
                     onSelectSlot={handleSlotSelect}
                   />
                 </div>

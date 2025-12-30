@@ -7,6 +7,7 @@ import { BookingForm, type BookingFormData } from '../components/booking/Booking
 import { sendBookingConfirmation, sendBookingNotificationToHost } from '../services/emailService';
 import { useAntiSpam } from '../hooks/useAntiSpam';
 import { TurnstileCaptcha } from '../components/common/Captcha';
+import { bookSlot, checkSlotAvailability } from '../services/bookingService';
 import type { Database } from '../lib/database.types';
 
 type EventType = Database['public']['Tables']['event_types']['Row'];
@@ -17,7 +18,7 @@ interface BookingStep {
 }
 
 export function PublicBooking() {
-  const { username } = useParams<{ username: string }>();
+  const { username, eventTypeId } = useParams<{ username?: string; eventTypeId?: string }>();
   const navigate = useNavigate();
 
   const [eventType, setEventType] = useState<EventType | null>(null);
@@ -37,39 +38,70 @@ export function PublicBooking() {
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
-    if (username) {
+    if (username || eventTypeId) {
       loadEventType();
     }
-  }, [username]);
+  }, [username, eventTypeId]);
 
   const loadEventType = async () => {
     setLoading(true);
     try {
-      // Get user profile by username
-      const { data: userData, error: userError } = await supabase
-        .from('users_profile')
-        .select('*')
-        .eq('username', username)
-        .single();
+      // Route 1: Load by event type ID directly (/book/:eventTypeId)
+      if (eventTypeId) {
+        const { data: eventData, error: eventError } = await supabase
+          .from('event_types')
+          .select('*')
+          .eq('id', eventTypeId)
+          .eq('is_active', true)
+          .single();
 
-      if (userError) throw userError;
-      if (!userData) throw new Error('User not found');
+        if (eventError) throw eventError;
+        if (!eventData) throw new Error('Event type not found or inactive');
 
-      setHost(userData);
+        setEventType(eventData);
 
-      // Get first active event type for this user
-      const { data: eventData, error: eventError } = await supabase
-        .from('event_types')
-        .select('*')
-        .eq('user_id', userData.id)
-        .eq('is_active', true)
-        .limit(1)
-        .single();
+        // Get the host's profile
+        const { data: userData, error: userError } = await supabase
+          .from('users_profile')
+          .select('*')
+          .eq('id', eventData.user_id)
+          .single();
 
-      if (eventError && eventError.code !== 'PGRST116') throw eventError;
-      if (!eventData) throw new Error('No available event types');
+        if (userError) throw userError;
+        if (!userData) throw new Error('Host not found');
 
-      setEventType(eventData);
+        setHost(userData);
+        return;
+      }
+
+      // Route 2: Load by username (/u/:username)
+      if (username) {
+        // Get user profile by username
+        const { data: userData, error: userError } = await supabase
+          .from('users_profile')
+          .select('*')
+          .eq('username', username)
+          .single();
+
+        if (userError) throw userError;
+        if (!userData) throw new Error('User not found');
+
+        setHost(userData);
+
+        // Get first active event type for this user
+        const { data: eventData, error: eventError } = await supabase
+          .from('event_types')
+          .select('*')
+          .eq('user_id', userData.id)
+          .eq('is_active', true)
+          .limit(1)
+          .single();
+
+        if (eventError && eventError.code !== 'PGRST116') throw eventError;
+        if (!eventData) throw new Error('No available event types');
+
+        setEventType(eventData);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load event type';
       setError(message);
@@ -116,24 +148,50 @@ export function PublicBooking() {
       const startTime = new Date(selectedSlot);
       const endTime = new Date(startTime.getTime() + eventType.duration * 60000);
 
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .insert({
-          user_id: eventType.user_id,
-          event_type_id: eventType.id,
-          guest_name: data.guestName,
-          guest_email: data.guestEmail,
-          guest_time_zone: data.guestTimeZone,
-          start_time: startTime.toISOString(),
-          end_time: endTime.toISOString(),
-          notes: data.notes,
-          status: 'confirmed',
-        })
-        .select()
-        .single();
+      // ============================================
+      // DOUBLE-BOOKING PREVENTION: Check slot availability
+      // This is a critical check to prevent race conditions
+      // ============================================
+      const slotCheck = await checkSlotAvailability(
+        eventType.user_id,
+        eventType.id,
+        startTime,
+        endTime
+      );
 
-      if (error) throw error;
-      if (!booking) throw new Error('Failed to create booking');
+      if (!slotCheck.available) {
+        setError(slotCheck.reason || 'This time slot is no longer available. Please select another time.');
+        // Go back to slot selection to let user pick another time
+        setStep('slot-selection');
+        setSelectedSlot(null);
+        return;
+      }
+
+      // ============================================
+      // CREATE BOOKING: Use the booking service
+      // ============================================
+      const bookingResult = await bookSlot(
+        eventType.user_id,
+        eventType.id,
+        data.guestName,
+        data.guestEmail,
+        startTime,
+        endTime,
+        data.notes,
+        data.guestTimeZone
+      );
+
+      if (!bookingResult.success || !bookingResult.booking) {
+        // Handle booking failure (e.g., slot taken by another user)
+        setError(bookingResult.error || 'Failed to create booking. Please try again.');
+        if (bookingResult.error?.includes('no longer available') || bookingResult.error?.includes('just booked')) {
+          setStep('slot-selection');
+          setSelectedSlot(null);
+        }
+        return;
+      }
+
+      const booking = bookingResult.booking;
 
       // ============================================
       // ANTI-SPAM: Mark booking as successful
@@ -266,6 +324,8 @@ export function PublicBooking() {
                 <SlotSelection
                   duration={eventType.duration}
                   timezone={host.time_zone}
+                  userId={host.id}
+                  eventTypeId={eventType.id}
                   onSelectSlot={handleSlotSelect}
                 />
               )}

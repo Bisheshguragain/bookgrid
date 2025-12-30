@@ -593,3 +593,28 @@ export interface ReminderRecord {
   sent_at?: string | null
   created_at?: string
 }
+
+// ============================================
+// CONTACTS TYPES
+// ============================================
+export interface Contact {
+  id: string
+  user_id: string
+  full_name: string
+  email: string
+  phone_number: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ContactInsert {
+  full_name: string
+  email: string
+  phone_number: string
+}
+
+export interface ContactUpdate {
+  full_name?: string
+  email?: string
+  phone_number?: string
+}

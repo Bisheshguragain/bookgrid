@@ -2,6 +2,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { cn } from '../../utils/cn';
+import { useAuthStore } from '../../store/authStore';
+import { ContactSelector } from './ContactSelector';
+import type { Contact } from '../../lib/database.types';
+import { useState, useEffect } from 'react';
 
 const bookingFormSchema = z.object({
   guestName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -44,10 +48,16 @@ export function BookingForm({
   loading = false,
   userTimeZone = 'America/New_York',
 }: BookingFormProps) {
+  // Check if user is authenticated to show contact selector
+  const { user } = useAuthStore();
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -55,8 +65,71 @@ export function BookingForm({
     },
   });
 
+  // Watch form values for debugging
+  const currentName = watch('guestName');
+  const currentEmail = watch('guestEmail');
+
+  /**
+   * Handle contact selection - auto-fill form fields
+   * This provides a seamless experience for users with saved contacts
+   */
+  const handleContactSelect = (contact: Contact | null) => {
+    setSelectedContact(contact);
+    
+    if (contact) {
+      // Auto-fill the form with contact data
+      setValue('guestName', contact.full_name, { shouldValidate: true });
+      setValue('guestEmail', contact.email, { shouldValidate: true });
+    } else {
+      // Clear the form if contact is deselected
+      setValue('guestName', '', { shouldValidate: false });
+      setValue('guestEmail', '', { shouldValidate: false });
+    }
+  };
+
+  // Clear selected contact if user manually changes name or email
+  useEffect(() => {
+    if (selectedContact) {
+      if (
+        currentName !== selectedContact.full_name ||
+        currentEmail !== selectedContact.email
+      ) {
+        setSelectedContact(null);
+      }
+    }
+  }, [currentName, currentEmail, selectedContact]);
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Contact Selector - Only shown for authenticated users */}
+      {user && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-900 mb-2">
+            Quick fill from contacts
+          </label>
+          <ContactSelector
+            onSelect={handleContactSelect}
+            selectedContact={selectedContact}
+            placeholder="Search your saved contacts..."
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Select a saved contact to auto-fill the form
+          </p>
+        </div>
+      )}
+
+      {/* Divider - Only shown when contact selector is visible */}
+      {user && (
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">or enter details manually</span>
+          </div>
+        </div>
+      )}
+
       {/* Name Field */}
       <div>
         <label htmlFor="guestName" className="block text-sm font-medium text-gray-900 mb-1">
