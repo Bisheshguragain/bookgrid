@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, addMonths, subMonths, isBefore } from 'date-fns';
-import type { BookingWithEventType } from '../lib/database.types';
+import type { BookingWithEventType, Contact } from '../lib/database.types';
+import { generateAvailableSlots, type TimeSlot } from '../services/bookingService';
+import { getContacts, createContact } from '../services/contactsService';
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -28,11 +30,22 @@ export function CalendarView() {
     event_type_id: '',
     prospect_name: '',
     prospect_email: '',
-    meeting_time: '09:00',
+    prospect_phone: '',
+    meeting_time: '',
     notes: '',
   });
   const [quickBookSubmitting, setQuickBookSubmitting] = useState(false);
   const [quickBookError, setQuickBookError] = useState('');
+  
+  // Available time slots for selected date and event type
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  
+  // Contact selection state
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contactMode, setContactMode] = useState<'existing' | 'new'>('existing');
+  const [selectedContactId, setSelectedContactId] = useState<string>('');
+  const [saveAsContact, setSaveAsContact] = useState(true); // Save new contact to contacts list
   
   const { user } = useAuthStore();
 
@@ -214,6 +227,71 @@ export function CalendarView() {
   // ============================================
   
   /**
+   * Load contacts when modal opens
+   */
+  useEffect(() => {
+    if (!user || !showQuickBook) return;
+    
+    const loadContacts = async () => {
+      try {
+        const data = await getContacts(user.id);
+        setContacts(data);
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+      }
+    };
+    
+    loadContacts();
+  }, [user, showQuickBook]);
+  
+  /**
+   * Load available slots when date or event type changes
+   */
+  useEffect(() => {
+    if (!user || !quickBookDate || !quickBookForm.event_type_id) {
+      setAvailableSlots([]);
+      return;
+    }
+    
+    const loadAvailableSlots = async () => {
+      setLoadingSlots(true);
+      try {
+        const selectedEventType = eventTypes.find(et => et.id === quickBookForm.event_type_id);
+        if (!selectedEventType) return;
+        
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const slots = await generateAvailableSlots(
+          user.id,
+          quickBookForm.event_type_id,
+          quickBookDate,
+          selectedEventType.duration,
+          timezone,
+          30 // 30 minute intervals
+        );
+        
+        setAvailableSlots(slots);
+        
+        // Auto-select first available slot
+        if (slots.length > 0 && !quickBookForm.meeting_time) {
+          const firstSlot = slots[0];
+          const slotDate = new Date(firstSlot.startTime);
+          setQuickBookForm(prev => ({ 
+            ...prev, 
+            meeting_time: format(slotDate, 'HH:mm')
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading available slots:', error);
+        setAvailableSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+    
+    loadAvailableSlots();
+  }, [user, quickBookDate, quickBookForm.event_type_id, eventTypes]);
+  
+  /**
    * Open quick book modal for a specific date
    */
   const openQuickBook = (date: Date) => {
@@ -222,10 +300,14 @@ export function CalendarView() {
       event_type_id: eventTypes.length > 0 ? eventTypes[0].id : '',
       prospect_name: '',
       prospect_email: '',
-      meeting_time: '09:00',
+      prospect_phone: '',
+      meeting_time: '',
       notes: '',
     });
     setQuickBookError('');
+    setContactMode('existing');
+    setSelectedContactId('');
+    setSaveAsContact(true);
     setShowQuickBook(true);
   };
 
@@ -236,6 +318,25 @@ export function CalendarView() {
     setShowQuickBook(false);
     setQuickBookDate(null);
     setQuickBookError('');
+    setAvailableSlots([]);
+    setContactMode('existing');
+    setSelectedContactId('');
+  };
+  
+  /**
+   * Handle contact selection from existing contacts
+   */
+  const handleContactSelect = (contactId: string) => {
+    setSelectedContactId(contactId);
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact) {
+      setQuickBookForm(prev => ({
+        ...prev,
+        prospect_name: contact.full_name,
+        prospect_email: contact.email,
+        prospect_phone: contact.phone_number || '',
+      }));
+    }
   };
 
   /**
@@ -248,6 +349,10 @@ export function CalendarView() {
     // Validate
     if (!quickBookForm.event_type_id) {
       setQuickBookError('Please select an event type');
+      return;
+    }
+    if (!quickBookForm.meeting_time) {
+      setQuickBookError('Please select a meeting time');
       return;
     }
     if (!quickBookForm.prospect_name || quickBookForm.prospect_name.length < 2) {
@@ -281,6 +386,26 @@ export function CalendarView() {
     setQuickBookError('');
 
     try {
+      // If adding a new contact and saveAsContact is true, save to contacts first
+      if (contactMode === 'new' && saveAsContact && quickBookForm.prospect_phone) {
+        const contactResult = await createContact(user.id, {
+          full_name: quickBookForm.prospect_name,
+          email: quickBookForm.prospect_email,
+          phone_number: quickBookForm.prospect_phone,
+        });
+        
+        if (contactResult.success && contactResult.contact) {
+          // Add the new contact to local state
+          setContacts(prev => [...prev, contactResult.contact!].sort((a, b) => 
+            a.full_name.localeCompare(b.full_name)
+          ));
+        }
+        // Don't fail the booking if contact save fails - just log it
+        if (!contactResult.success) {
+          console.warn('Contact not saved:', contactResult.error);
+        }
+      }
+      
       const { data: newBooking, error } = await supabase
         .from('bookings')
         .insert({
@@ -861,7 +986,7 @@ export function CalendarView() {
       {/* ============================================ */}
       {showQuickBook && quickBookDate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">📅 Quick Book a Meeting</h2>
@@ -894,7 +1019,9 @@ export function CalendarView() {
                 </label>
                 <select
                   value={quickBookForm.event_type_id}
-                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, event_type_id: e.target.value }))}
+                  onChange={(e) => {
+                    setQuickBookForm(prev => ({ ...prev, event_type_id: e.target.value, meeting_time: '' }));
+                  }}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   required
                 >
@@ -907,50 +1034,171 @@ export function CalendarView() {
                 </select>
               </div>
               
-              {/* Meeting Time */}
+              {/* Meeting Time - Available Slots Dropdown */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Meeting Time *
+                  Available Time Slots *
                 </label>
-                <input
-                  type="time"
-                  value={quickBookForm.meeting_time}
-                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, meeting_time: e.target.value }))}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  required
-                />
+                {loadingSlots ? (
+                  <div className="flex items-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50">
+                    <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500 text-sm">Loading available slots...</span>
+                  </div>
+                ) : availableSlots.length > 0 ? (
+                  <select
+                    value={quickBookForm.meeting_time}
+                    onChange={(e) => setQuickBookForm(prev => ({ ...prev, meeting_time: e.target.value }))}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    required
+                  >
+                    <option value="">Select a time slot</option>
+                    {availableSlots.map(slot => (
+                      <option key={slot.id} value={format(new Date(slot.startTime), 'HH:mm')}>
+                        {slot.displayTime}
+                      </option>
+                    ))}
+                  </select>
+                ) : quickBookForm.event_type_id ? (
+                  <div className="px-4 py-3 border-2 border-yellow-200 rounded-xl bg-yellow-50 text-yellow-700 text-sm">
+                    ⚠️ No available slots for this date. Try another date or check your availability settings.
+                  </div>
+                ) : (
+                  <div className="px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-500 text-sm">
+                    Select an event type to see available slots
+                  </div>
+                )}
               </div>
               
-              {/* Prospect Name */}
+              {/* Contact Selection Mode */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Guest Name *
+                  Guest Contact
                 </label>
-                <input
-                  type="text"
-                  value={quickBookForm.prospect_name}
-                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, prospect_name: e.target.value }))}
-                  placeholder="John Doe"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  required
-                  minLength={2}
-                />
+                <div className="flex gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContactMode('existing');
+                      setQuickBookForm(prev => ({ ...prev, prospect_name: '', prospect_email: '', prospect_phone: '' }));
+                      setSelectedContactId('');
+                    }}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      contactMode === 'existing'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    📋 Select Existing
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContactMode('new');
+                      setQuickBookForm(prev => ({ ...prev, prospect_name: '', prospect_email: '', prospect_phone: '' }));
+                      setSelectedContactId('');
+                    }}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      contactMode === 'new'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    ➕ Add New
+                  </button>
+                </div>
               </div>
               
-              {/* Prospect Email */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Guest Email *
-                </label>
-                <input
-                  type="email"
-                  value={quickBookForm.prospect_email}
-                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, prospect_email: e.target.value }))}
-                  placeholder="john@example.com"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  required
-                />
-              </div>
+              {/* Existing Contact Selection */}
+              {contactMode === 'existing' && (
+                <div>
+                  <select
+                    value={selectedContactId}
+                    onChange={(e) => handleContactSelect(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="">Select a contact</option>
+                    {contacts.map(contact => (
+                      <option key={contact.id} value={contact.id}>
+                        {contact.full_name} ({contact.email})
+                      </option>
+                    ))}
+                  </select>
+                  {contacts.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      No contacts found. Switch to "Add New" to create a contact.
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* New Contact Form */}
+              {contactMode === 'new' && (
+                <div className="space-y-3 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={quickBookForm.prospect_name}
+                      onChange={(e) => setQuickBookForm(prev => ({ ...prev, prospect_name: e.target.value }))}
+                      placeholder="John Doe"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      required
+                      minLength={2}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={quickBookForm.prospect_email}
+                      onChange={(e) => setQuickBookForm(prev => ({ ...prev, prospect_email: e.target.value }))}
+                      placeholder="john@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={quickBookForm.prospect_phone}
+                      onChange={(e) => setQuickBookForm(prev => ({ ...prev, prospect_phone: e.target.value }))}
+                      placeholder="+1 234 567 8900"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  
+                  {/* Save to Contacts Checkbox */}
+                  <label className="flex items-center gap-2 cursor-pointer pt-2">
+                    <input
+                      type="checkbox"
+                      checked={saveAsContact}
+                      onChange={(e) => setSaveAsContact(e.target.checked)}
+                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <span className="text-sm text-gray-700">Save to my contacts</span>
+                  </label>
+                </div>
+              )}
+              
+              {/* Show selected contact info if using existing */}
+              {contactMode === 'existing' && selectedContactId && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm font-medium text-green-800">👤 {quickBookForm.prospect_name}</p>
+                  <p className="text-xs text-green-700">✉️ {quickBookForm.prospect_email}</p>
+                  {quickBookForm.prospect_phone && (
+                    <p className="text-xs text-green-700">📞 {quickBookForm.prospect_phone}</p>
+                  )}
+                </div>
+              )}
               
               {/* Notes */}
               <div>
@@ -961,7 +1209,7 @@ export function CalendarView() {
                   value={quickBookForm.notes}
                   onChange={(e) => setQuickBookForm(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="Any additional notes for this meeting..."
-                  rows={3}
+                  rows={2}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
                 />
               </div>
@@ -977,8 +1225,8 @@ export function CalendarView() {
                 </button>
                 <button
                   type="submit"
-                  disabled={quickBookSubmitting}
-                  className="flex-1 px-4 py-3 text-white bg-purple-600 hover:bg-purple-700 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  disabled={quickBookSubmitting || !quickBookForm.meeting_time || !quickBookForm.prospect_name || !quickBookForm.prospect_email}
+                  className="flex-1 px-4 py-3 text-white bg-purple-600 hover:bg-purple-700 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {quickBookSubmitting ? (
                     <>
