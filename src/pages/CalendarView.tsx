@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, addMonths, subMonths, isBefore } from 'date-fns';
@@ -11,6 +11,29 @@ export function CalendarView() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<BookingWithEventType | null>(null);
+  
+  // ============================================
+  // DRAG & DROP STATE
+  // ============================================
+  const [draggedBooking, setDraggedBooking] = useState<BookingWithEventType | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
+  
+  // ============================================
+  // QUICK BOOK STATE
+  // ============================================
+  const [showQuickBook, setShowQuickBook] = useState(false);
+  const [quickBookDate, setQuickBookDate] = useState<Date | null>(null);
+  const [eventTypes, setEventTypes] = useState<any[]>([]);
+  const [quickBookForm, setQuickBookForm] = useState({
+    event_type_id: '',
+    prospect_name: '',
+    prospect_email: '',
+    meeting_time: '09:00',
+    notes: '',
+  });
+  const [quickBookSubmitting, setQuickBookSubmitting] = useState(false);
+  const [quickBookError, setQuickBookError] = useState('');
+  
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -44,6 +67,253 @@ export function CalendarView() {
 
     loadBookings();
   }, [user, currentDate]);
+
+  // ============================================
+  // LOAD EVENT TYPES FOR QUICK BOOK
+  // ============================================
+  useEffect(() => {
+    if (!user) return;
+    
+    const loadEventTypes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('event_types')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('title', { ascending: true });
+
+        if (error) throw error;
+        setEventTypes(data || []);
+      } catch (error) {
+        console.error('Error loading event types:', error);
+      }
+    };
+
+    loadEventTypes();
+  }, [user]);
+
+  // ============================================
+  // DRAG & DROP HANDLERS
+  // ============================================
+  
+  /**
+   * Handle drag start - store the booking being dragged
+   */
+  const handleDragStart = useCallback((e: React.DragEvent, booking: BookingWithEventType) => {
+    if (!canModifyBooking(booking)) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedBooking(booking);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', booking.id);
+  }, []);
+
+  /**
+   * Handle drag over a date cell
+   */
+  const handleDragOver = useCallback((e: React.DragEvent, date: Date) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverDate(date);
+  }, []);
+
+  /**
+   * Handle drag leave
+   */
+  const handleDragLeave = useCallback(() => {
+    setDragOverDate(null);
+  }, []);
+
+  /**
+   * Handle drop on a date - move the booking
+   */
+  const handleDrop = useCallback(async (e: React.DragEvent, targetDate: Date) => {
+    e.preventDefault();
+    setDragOverDate(null);
+    
+    if (!draggedBooking || !user) {
+      setDraggedBooking(null);
+      return;
+    }
+
+    // Don't allow dropping on past dates
+    if (isBefore(targetDate, new Date()) && !isToday(targetDate)) {
+      alert('Cannot move booking to a past date');
+      setDraggedBooking(null);
+      return;
+    }
+
+    // Get the original time from the booking
+    const originalStart = new Date(draggedBooking.start_time);
+    const newStartTime = new Date(targetDate);
+    newStartTime.setHours(originalStart.getHours(), originalStart.getMinutes(), 0, 0);
+
+    // Check if it's the same date
+    if (isSameDay(originalStart, targetDate)) {
+      setDraggedBooking(null);
+      return;
+    }
+
+    // Calculate new end time
+    const duration = draggedBooking.event_types.duration;
+    const newEndTime = new Date(newStartTime.getTime() + duration * 60000);
+
+    // Confirm the move
+    const confirmMessage = `Move "${draggedBooking.guest_name}" booking from ${format(originalStart, 'MMM d')} to ${format(targetDate, 'MMM d')}?`;
+    if (!window.confirm(confirmMessage)) {
+      setDraggedBooking(null);
+      return;
+    }
+
+    setActionLoading(draggedBooking.id);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          start_time: newStartTime.toISOString(),
+          end_time: newEndTime.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', draggedBooking.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBookings(prev => prev.map(b => 
+        b.id === draggedBooking.id 
+          ? { ...b, start_time: newStartTime.toISOString(), end_time: newEndTime.toISOString() }
+          : b
+      ));
+
+      // Update selected date if we're viewing the source date
+      if (selectedDate && isSameDay(selectedDate, originalStart)) {
+        setSelectedDate(targetDate);
+      }
+    } catch (error) {
+      console.error('Error moving booking:', error);
+      alert('❌ Failed to move booking. The time slot may be taken.');
+    } finally {
+      setActionLoading(null);
+      setDraggedBooking(null);
+    }
+  }, [draggedBooking, user, selectedDate]);
+
+  /**
+   * Handle drag end
+   */
+  const handleDragEnd = useCallback(() => {
+    setDraggedBooking(null);
+    setDragOverDate(null);
+  }, []);
+
+  // ============================================
+  // QUICK BOOK HANDLERS
+  // ============================================
+  
+  /**
+   * Open quick book modal for a specific date
+   */
+  const openQuickBook = (date: Date) => {
+    setQuickBookDate(date);
+    setQuickBookForm({
+      event_type_id: eventTypes.length > 0 ? eventTypes[0].id : '',
+      prospect_name: '',
+      prospect_email: '',
+      meeting_time: '09:00',
+      notes: '',
+    });
+    setQuickBookError('');
+    setShowQuickBook(true);
+  };
+
+  /**
+   * Close quick book modal
+   */
+  const closeQuickBook = () => {
+    setShowQuickBook(false);
+    setQuickBookDate(null);
+    setQuickBookError('');
+  };
+
+  /**
+   * Submit quick book form
+   */
+  const handleQuickBookSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !quickBookDate) return;
+
+    // Validate
+    if (!quickBookForm.event_type_id) {
+      setQuickBookError('Please select an event type');
+      return;
+    }
+    if (!quickBookForm.prospect_name || quickBookForm.prospect_name.length < 2) {
+      setQuickBookError('Please enter a valid name (min 2 characters)');
+      return;
+    }
+    if (!quickBookForm.prospect_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(quickBookForm.prospect_email)) {
+      setQuickBookError('Please enter a valid email address');
+      return;
+    }
+
+    const selectedEventType = eventTypes.find(et => et.id === quickBookForm.event_type_id);
+    if (!selectedEventType) {
+      setQuickBookError('Invalid event type selected');
+      return;
+    }
+
+    // Create booking time
+    const [hours, minutes] = quickBookForm.meeting_time.split(':').map(Number);
+    const startTime = new Date(quickBookDate);
+    startTime.setHours(hours, minutes, 0, 0);
+    const endTime = new Date(startTime.getTime() + selectedEventType.duration * 60000);
+
+    // Check if in past
+    if (startTime < new Date()) {
+      setQuickBookError('Cannot book a meeting in the past');
+      return;
+    }
+
+    setQuickBookSubmitting(true);
+    setQuickBookError('');
+
+    try {
+      const { data: newBooking, error } = await supabase
+        .from('bookings')
+        .insert({
+          user_id: user.id,
+          event_type_id: quickBookForm.event_type_id,
+          guest_name: quickBookForm.prospect_name,
+          guest_email: quickBookForm.prospect_email,
+          guest_time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+          notes: quickBookForm.notes || null,
+          status: 'confirmed',
+        })
+        .select(`*, event_types (*)`)
+        .single();
+
+      if (error) throw error;
+
+      // Add to local state
+      setBookings(prev => [...prev, newBooking as BookingWithEventType].sort(
+        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      ));
+
+      closeQuickBook();
+      setSelectedDate(quickBookDate);
+      alert(`✅ Meeting booked with ${quickBookForm.prospect_name}!`);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      setQuickBookError('Failed to create booking. Please try again.');
+    } finally {
+      setQuickBookSubmitting(false);
+    }
+  };
 
   // ============================================
   // BOOKING ACTIONS: Cancel & Reschedule
@@ -253,35 +523,67 @@ export function CalendarView() {
                 const dayBookings = getBookingsForDate(date);
                 const isSelected = selectedDate && isSameDay(date, selectedDate);
                 const isCurrentDay = isToday(date);
+                const isPastDate = isBefore(date, new Date()) && !isToday(date);
+                const isDragOver = dragOverDate && isSameDay(date, dragOverDate);
+                const canDropHere = !isPastDate && draggedBooking !== null;
 
                 return (
-                  <button
+                  <div
                     key={date.toISOString()}
                     onClick={() => setSelectedDate(date)}
-                    className={`bg-white min-h-24 p-2 text-left hover:bg-purple-50 transition-colors relative ${
+                    onDragOver={canDropHere ? (e) => handleDragOver(e, date) : undefined}
+                    onDragLeave={handleDragLeave}
+                    onDrop={canDropHere ? (e) => handleDrop(e, date) : undefined}
+                    className={`bg-white min-h-24 p-2 text-left hover:bg-purple-50 transition-colors relative cursor-pointer group ${
                       !isSameMonth(date, currentDate) ? 'text-gray-400' : ''
-                    } ${isSelected ? 'ring-2 ring-purple-500 ring-inset bg-purple-50' : ''}`}
+                    } ${isSelected ? 'ring-2 ring-purple-500 ring-inset bg-purple-50' : ''} ${
+                      isDragOver ? 'ring-2 ring-green-500 ring-inset bg-green-50' : ''
+                    } ${isPastDate ? 'opacity-60' : ''}`}
                   >
-                    <span
-                      className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
-                        isCurrentDay
-                          ? 'bg-purple-600 text-white shadow-md'
-                          : 'text-gray-900'
-                      }`}
-                    >
-                      {format(date, 'd')}
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
+                          isCurrentDay
+                            ? 'bg-purple-600 text-white shadow-md'
+                            : 'text-gray-900'
+                        }`}
+                      >
+                        {format(date, 'd')}
+                      </span>
+                      
+                      {/* Quick Book Button - shows on hover for future dates */}
+                      {!isPastDate && eventTypes.length > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openQuickBook(date);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-purple-200 rounded-full text-purple-600"
+                          title="Book a meeting"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
 
                     {dayBookings.length > 0 && (
                       <div className="mt-1 space-y-1">
                         {dayBookings.slice(0, 2).map((booking) => (
                           <div
                             key={booking.id}
-                            className="text-xs px-1 py-0.5 rounded truncate"
+                            draggable={canModifyBooking(booking)}
+                            onDragStart={(e) => handleDragStart(e, booking)}
+                            onDragEnd={handleDragEnd}
+                            className={`text-xs px-1 py-0.5 rounded truncate ${
+                              canModifyBooking(booking) ? 'cursor-grab active:cursor-grabbing hover:shadow-md' : ''
+                            } ${draggedBooking?.id === booking.id ? 'opacity-50 ring-1 ring-purple-400' : ''}`}
                             style={{
                               backgroundColor: booking.event_types.color + '20',
                               color: booking.event_types.color,
                             }}
+                            title={canModifyBooking(booking) ? 'Drag to reschedule' : undefined}
                           >
                             {format(new Date(booking.start_time), 'h:mm a')}
                           </div>
@@ -293,7 +595,14 @@ export function CalendarView() {
                         )}
                       </div>
                     )}
-                  </button>
+                    
+                    {/* Drop indicator */}
+                    {isDragOver && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-green-100 bg-opacity-80 rounded pointer-events-none">
+                        <span className="text-green-700 text-xs font-semibold">Drop here</span>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -301,9 +610,28 @@ export function CalendarView() {
             {/* Selected Date Details */}
             {selectedDate && (
               <div className="border-t-2 border-purple-100 pt-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  📅 {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    📅 {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                  </h3>
+                  
+                  {/* Book Meeting Button for selected date */}
+                  {!isBefore(selectedDate, new Date()) || isToday(selectedDate) ? (
+                    eventTypes.length > 0 && (
+                      <button
+                        onClick={() => openQuickBook(selectedDate)}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-md hover:shadow-lg"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Book a Meeting
+                      </button>
+                    )
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">Past date</span>
+                  )}
+                </div>
 
                 {selectedBookings.length === 0 ? (
                   <div className="text-center py-8 bg-purple-50 rounded-xl">
@@ -524,6 +852,150 @@ export function CalendarView() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================ */}
+      {/* QUICK BOOK MODAL */}
+      {/* ============================================ */}
+      {showQuickBook && quickBookDate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">📅 Quick Book a Meeting</h2>
+                <button
+                  onClick={closeQuickBook}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Book a meeting for <strong>{format(quickBookDate, 'EEEE, MMMM d, yyyy')}</strong>
+              </p>
+            </div>
+            
+            <form onSubmit={handleQuickBookSubmit} className="p-6 space-y-4">
+              {/* Error Display */}
+              {quickBookError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  ❌ {quickBookError}
+                </div>
+              )}
+              
+              {/* Event Type Selection */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Event Type *
+                </label>
+                <select
+                  value={quickBookForm.event_type_id}
+                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, event_type_id: e.target.value }))}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  required
+                >
+                  <option value="">Select an event type</option>
+                  {eventTypes.map(et => (
+                    <option key={et.id} value={et.id}>
+                      {et.title} ({et.duration} min)
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Meeting Time */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Meeting Time *
+                </label>
+                <input
+                  type="time"
+                  value={quickBookForm.meeting_time}
+                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, meeting_time: e.target.value }))}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  required
+                />
+              </div>
+              
+              {/* Prospect Name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Guest Name *
+                </label>
+                <input
+                  type="text"
+                  value={quickBookForm.prospect_name}
+                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, prospect_name: e.target.value }))}
+                  placeholder="John Doe"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  required
+                  minLength={2}
+                />
+              </div>
+              
+              {/* Prospect Email */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Guest Email *
+                </label>
+                <input
+                  type="email"
+                  value={quickBookForm.prospect_email}
+                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, prospect_email: e.target.value }))}
+                  placeholder="john@example.com"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  required
+                />
+              </div>
+              
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={quickBookForm.notes}
+                  onChange={(e) => setQuickBookForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Any additional notes for this meeting..."
+                  rows={3}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                />
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeQuickBook}
+                  className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={quickBookSubmitting}
+                  className="flex-1 px-4 py-3 text-white bg-purple-600 hover:bg-purple-700 rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {quickBookSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Booking...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Book Meeting
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
