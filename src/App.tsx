@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
 import { ConnectionStatus } from './components/ConnectionStatus';
@@ -115,6 +116,7 @@ function App() {
   return (
     <BrowserRouter>
       <ConnectionStatus />
+      <VercelAnalytics />
       <Routes>
         {/* Public landing page */}
         <Route path="/" element={<Landing />} />
