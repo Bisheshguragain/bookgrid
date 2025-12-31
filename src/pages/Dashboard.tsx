@@ -4,7 +4,6 @@ import { useAuthStore } from '../store/authStore';
 import { useRealtimeBookings } from '../hooks/useRealtimeBookings';
 import { supabase } from '../lib/supabase';
 import { formatDateTime } from '../utils/datetime';
-import { getUserSubscription, type SubscriptionInfo } from '../services/subscriptionService';
 import type { BookingWithEventType } from '../lib/database.types';
 
 export function Dashboard() {
@@ -16,7 +15,6 @@ export function Dashboard() {
   const [upcomingEvents, setUpcomingEvents] = useState<BookingWithEventType[]>([]);
   const [recentBookings, setRecentBookings] = useState<BookingWithEventType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
 
   const { user, profile } = useAuthStore();
   const { newBookingCount, clearNewBookingNotification } = useRealtimeBookings({
@@ -32,12 +30,6 @@ export function Dashboard() {
       setLoading(true);
       try {
         const now = new Date().toISOString();
-
-        // Fetch subscription info
-        if (user?.id) {
-          const subscriptionData = await getUserSubscription(user.id);
-          setSubscription(subscriptionData);
-        }
 
         // Fetch stats
         const [upcomingCount, pastCount, eventTypesCount] = await Promise.all([

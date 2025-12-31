@@ -11,7 +11,6 @@ import {
   sendRescheduleConfirmation,
   sendCancellationConfirmation
 } from '../services/emailService';
-import { useLocation } from 'react-router-dom';
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -59,7 +58,6 @@ export function CalendarView() {
   const [saveAsContact, setSaveAsContact] = useState(true); // Save new contact to contacts list
   
   const { user } = useAuthStore();
-  const location = useLocation();
 
   useEffect(() => {
     if (!user) return;
@@ -682,7 +680,7 @@ export function CalendarView() {
   const firstDayOfMonth = monthStart.getDay();
   const paddingDays = Array.from({ length: firstDayOfMonth }, (_, i) => i);
 
-    function setActiveTab(arg0: string): void {
+    function setActiveTab() {
         throw new Error('Function not implemented.');
     }
 
@@ -692,7 +690,7 @@ export function CalendarView() {
       <div className="flex gap-4 mb-6">
         <button
           className={`px-4 py-2 rounded-lg font-semibold transition-colors bg-purple-600 text-white`}
-          onClick={() => setActiveTab('calendar')}
+          onClick={() => setActiveTab()}
         >
           Calendar
         </button>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import { subDays, format, parseISO, isAfter, isBefore } from 'date-fns';
+import { subDays, format, parseISO } from 'date-fns'; // Removed isAfter, isBefore
 import { formatInTimeZone } from 'date-fns-tz';
 import {
   LineChart, Line, PieChart, Pie,

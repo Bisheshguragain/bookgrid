@@ -1,4 +1,4 @@
-import { parseISO, addMinutes, isSameDay, startOfDay, endOfDay } from 'date-fns';
+import { parseISO, addMinutes, isSameDay } from 'date-fns';
 import { formatInTimeZone, zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz';
 import type { AvailabilityRule, Booking } from '../lib/database.types';
 
@@ -50,8 +50,6 @@ export function generateTimeSlots(
   if (rules.length === 0) return slots;
   
   // Get existing bookings for this date
-  const dayStart = startOfDay(date);
-  const dayEnd = endOfDay(date);
   const dayBookings = existingBookings.filter(booking => {
     const bookingDate = parseISO(booking.start_time);
     return isSameDay(bookingDate, date) && booking.status === 'confirmed';

@@ -45,11 +45,6 @@ export function SuperAdminDashboard() {
   const [users, setUsers] = useState<SuperAdminUser[]>([]);
   const [usersTotal, setUsersTotal] = useState(0);
   const [usersPage, setUsersPage] = useState(1);
-  const [userFilters, setUserFilters] = useState<{
-    plan?: 'free' | 'pro' | 'business';
-    status?: string;
-    search?: string;
-  }>({});
   
   // Payments State
   const [payments, setPayments] = useState<PaymentHistory[]>([]);
@@ -104,7 +99,7 @@ export function SuperAdminDashboard() {
           setUserStats(statsData);
           setRevenueStats(revenueData);
         } else if (activeTab === 'users') {
-          const { users: usersData, total } = await getAllUsers(usersPage, 50, userFilters);
+          const { users: usersData, total } = await getAllUsers(usersPage, 50);
           setUsers(usersData);
           setUsersTotal(total);
         } else if (activeTab === 'payments') {
@@ -125,7 +120,7 @@ export function SuperAdminDashboard() {
     };
 
     loadData();
-  }, [authorized, activeTab, usersPage, paymentsPage, userFilters]);
+  }, [authorized, activeTab, usersPage, paymentsPage]);
 
   const handleUpdatePlan = async (userId: string, plan: 'free' | 'pro' | 'business') => {
     if (!window.confirm(`Are you sure you want to change this user's plan to ${plan.toUpperCase()}?`)) {
@@ -136,7 +131,7 @@ export function SuperAdminDashboard() {
     try {
       await updateUserPlan(userId, plan);
       // Reload users
-      const { users: usersData, total } = await getAllUsers(usersPage, 50, userFilters);
+      const { users: usersData, total } = await getAllUsers(usersPage, 50);
       setUsers(usersData);
       setUsersTotal(total);
       alert('Plan updated successfully!');
@@ -157,7 +152,7 @@ export function SuperAdminDashboard() {
     try {
       await updateUserStatus(userId, status);
       // Reload users
-      const { users: usersData, total } = await getAllUsers(usersPage, 50, userFilters);
+      const { users: usersData, total } = await getAllUsers(usersPage, 50);
       setUsers(usersData);
       setUsersTotal(total);
       alert('Status updated successfully!');
