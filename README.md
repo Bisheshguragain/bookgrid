@@ -1,10 +1,10 @@
-# BookGrid - Production-Ready Scheduling Application
+# BookAgreed - Production-Ready Scheduling Application
 
-A comprehensive, production-grade scheduling application built with React, TypeScript, and Vite. BookGrid provides powerful meeting scheduling with paid meeting support, multi-tier subscriptions, and analytics features.
+A comprehensive, production-grade scheduling application built with React, TypeScript, and Vite. BookAgreed provides powerful meeting scheduling with paid meeting support, multi-tier subscriptions, and analytics features.
 
-## 🌟 About BookGrid
+## 🌟 About BookAgreed
 
-BookGrid is a modern scheduling platform that makes it easy to book meetings and manage your calendar. Built with the latest web technologies, it offers a seamless experience for both meeting organizers and attendees, with support for paid consultations and flexible subscription tiers.
+BookAgreed is a modern scheduling platform that makes it easy to book meetings and manage your calendar. Built with the latest web technologies, it offers a seamless experience for both meeting organizers and attendees, with support for paid consultations and flexible subscription tiers.
 
 ## 🚀 Features
 
@@ -34,7 +34,7 @@ BookGrid is a modern scheduling platform that makes it easy to book meetings and
 - **Real-time Updates**: Live data synchronization
 - **Type Safety**: Full TypeScript coverage
 - **Modern UI**: Tailwind CSS with professional design
-- **Professional Branding**: BookGrid logo and consistent brand identity
+- **Professional Branding**: BookAgreed logo and consistent brand identity
 
 ## 🛠 Technology Stack
 
@@ -204,7 +204,7 @@ Ensure these environment variables are set:
 - Subscription system (Free, Pro, Business)
 - Rate limiting and feature enforcement
 - Mobile-responsive design with hamburger menu
-- Professional BookGrid branding
+- Professional BookAgreed branding
 - PDF export functionality
 
 ### Future Enhancements 📋
@@ -260,4 +260,3 @@ export default defineConfig([
     },
   },
 ])
-```

@@ -75,9 +75,9 @@ export function LoginForm() {
         <div className="text-center">
           <Link to="/" className="inline-block mb-6">
             <img 
-              src="/BookGrid logo.2.jpg" 
-              alt="BookGrid" 
-              className="h-16 mx-auto"
+              src="/BookAgreed%20logo.jpg" 
+              alt="BookAgreed" 
+              className="h-20 mx-auto"
             />
           </Link>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

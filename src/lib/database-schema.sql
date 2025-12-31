@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users_profile (
     time_zone TEXT DEFAULT 'America/New_York',
     avatar_url TEXT,
     default_meeting_duration INTEGER DEFAULT 30,
+    company_name TEXT, -- Optional company name
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
     status TEXT CHECK (status IN ('confirmed', 'cancelled', 'rescheduled')) DEFAULT 'confirmed',
     notes TEXT CHECK (length(notes) <= 500),
+    meeting_method TEXT, -- Optional meeting method (e.g., Zoom, Phone, etc.)
     reschedule_token UUID DEFAULT gen_random_uuid(),
     cancel_token UUID DEFAULT gen_random_uuid(),
     guest_time_zone TEXT DEFAULT 'America/New_York',

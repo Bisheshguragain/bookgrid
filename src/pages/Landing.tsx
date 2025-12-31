@@ -96,9 +96,9 @@ export function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link to="/" className="flex items-center">
             <img 
-              src="/BookGrid logo.2.jpg" 
-              alt="BookGrid" 
-              className="h-14"
+              src="/BookAgreed%20logo.jpg" 
+              alt="BookAgreed" 
+              className="h-20"
             />
           </Link>
           <div className="flex items-center space-x-4">

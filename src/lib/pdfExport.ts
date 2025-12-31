@@ -50,7 +50,7 @@ export async function generateAnalyticsPDF(data: AnalyticsData, bookingsData?: a
   // Subtitle
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text('BookGrid - Booking Analytics', 105, 28, { align: 'center' });
+  doc.text('BookAgreed - Booking Analytics', 105, 28, { align: 'center' });
   
   // Date range in header
   doc.setFontSize(10);
@@ -328,7 +328,7 @@ export async function generateAnalyticsPDF(data: AnalyticsData, bookingsData?: a
     doc.setFont('helvetica', 'normal');
     
     // Left side - App name
-    doc.text('BookGrid - Analytics Report', 20, 292);
+    doc.text('BookAgreed - Analytics Report', 20, 292);
     
     // Right side - Page number
     doc.text(`Page ${i} of ${pageCount}`, 190, 292, { align: 'right' });

@@ -110,6 +110,29 @@ export function PublicBooking() {
     }
   };
 
+  // After loading eventType and host, check for holiday mode or inactive event type
+  useEffect(() => {
+    if (!loading && (!eventType || !host)) return;
+    // Check for holiday mode in localStorage for this user
+    if (host) {
+      const savedHoliday = localStorage.getItem(`holiday_mode_${host.id}`);
+      if (savedHoliday) {
+        const holiday = JSON.parse(savedHoliday);
+        const today = new Date().toISOString().split('T')[0];
+        if (holiday.enabled && holiday.start <= today && holiday.end >= today) {
+          setError('This user is not accepting bookings at the moment. Please contact them directly.');
+          setEventType(null);
+          return;
+        }
+      }
+    }
+    // If eventType is inactive
+    if (eventType && eventType.is_active === false) {
+      setError('This user is not accepting bookings at the moment. Please contact them directly.');
+      setEventType(null);
+    }
+  }, [eventType, host, loading]);
+
   const handleSlotSelect = (slot: string) => {
     setSelectedSlot(slot);
     setStep('booking-form');

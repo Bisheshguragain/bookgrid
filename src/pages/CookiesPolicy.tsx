@@ -9,8 +9,8 @@ export function CookiesPolicy() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link to="/" className="flex items-center">
             <img 
-              src="/BookGrid logo.2.jpg" 
-              alt="BookGrid" 
+              src="/BookAgreed%20logo.jpg" 
+              alt="BookAgreed" 
               className="h-8 w-auto"
             />
           </Link>

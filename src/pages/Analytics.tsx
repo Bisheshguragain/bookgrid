@@ -9,6 +9,7 @@ import {
   Cell,
 } from 'recharts';
 import { generateAnalyticsPDF } from '../lib/pdfExport';
+import { useLocation } from 'react-router-dom';
 
 export function Analytics() {
   const [dateRange, setDateRange] = useState({
@@ -19,12 +20,12 @@ export function Analytics() {
   const [chartData, setChartData] = useState<any[]>([]);
   const [eventTypeData, setEventTypeData] = useState<any[]>([]);
   const [bookingsData, setBookingsData] = useState<any[]>([]);
-  const [upcomingBookings, setUpcomingBookings] = useState<any[]>([]);
-  const [pastBookings, setPastBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'bookings'>('metrics');
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<'all' | 'confirmed' | 'cancelled'>('all');
 
   const { user, profile } = useAuthStore();
+  const location = useLocation();
 
   useEffect(() => {
     if (!user) return;
@@ -47,19 +48,6 @@ export function Analytics() {
 
         // Store bookings data for PDF export
         setBookingsData(bookings || []);
-
-        // Separate upcoming and past bookings
-        const now = new Date();
-        const upcoming = (bookings || [])
-          .filter((b: any) => isAfter(parseISO(b.start_time), now) && b.status !== 'cancelled')
-          .sort((a: any, b: any) => parseISO(a.start_time).getTime() - parseISO(b.start_time).getTime());
-        
-        const past = (bookings || [])
-          .filter((b: any) => isBefore(parseISO(b.start_time), now) || b.status === 'cancelled')
-          .sort((a: any, b: any) => parseISO(b.start_time).getTime() - parseISO(a.start_time).getTime());
-        
-        setUpcomingBookings(upcoming);
-        setPastBookings(past);
 
         // Calculate metrics
         const totalBookings = bookings?.length || 0;
@@ -109,6 +97,14 @@ export function Analytics() {
 
     loadAnalytics();
   }, [user, dateRange]);
+
+  // Set activeTab from query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === 'bookings') {
+      setActiveTab('bookings');
+    }
+  }, [location.search]);
 
   if (loading) {
     return (
@@ -201,15 +197,61 @@ export function Analytics() {
           >
             📆 Last 90 Days
           </button>
+          <button
+            onClick={() => {
+              const start = new Date();
+              const end = new Date();
+              end.setDate(start.getDate() + 7);
+              setDateRange({
+                start: start.toISOString().split('T')[0],
+                end: end.toISOString().split('T')[0],
+              });
+            }}
+            className="px-4 py-2 text-sm font-semibold text-green-700 bg-green-50 border-2 border-green-200 rounded-xl hover:bg-green-100 transition-all"
+          >
+            📆 Next 7 Days
+          </button>
+          <button
+            onClick={() => {
+              const start = new Date();
+              const end = new Date();
+              end.setDate(start.getDate() + 30);
+              setDateRange({
+                start: start.toISOString().split('T')[0],
+                end: end.toISOString().split('T')[0],
+              });
+            }}
+            className="px-4 py-2 text-sm font-semibold text-green-700 bg-green-50 border-2 border-green-200 rounded-xl hover:bg-green-100 transition-all"
+          >
+            📆 Next 30 Days
+          </button>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      {metrics && (
+      {/* Tab UI for Analytics */}
+      <div className="flex gap-4 mb-6">
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'metrics' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}
+          onClick={() => setActiveTab('metrics')}
+        >
+          Metrics
+        </button>
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'bookings' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}
+          onClick={() => setActiveTab('bookings')}
+        >
+          Bookings
+        </button>
+      </div>
+
+      {activeTab === 'metrics' ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Total Bookings */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-100">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div
+              className={`bg-white rounded-xl p-6 shadow-lg border-2 border-purple-100 cursor-pointer ${bookingStatusFilter === 'all' ? 'ring-2 ring-purple-500' : ''}`}
+              onClick={() => setBookingStatusFilter('all')}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600">Total Bookings</p>
@@ -222,9 +264,10 @@ export function Analytics() {
                 </div>
               </div>
             </div>
-
-            {/* Confirmed Bookings */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-100">
+            <div
+              className={`bg-white rounded-xl p-6 shadow-lg border-2 border-green-100 cursor-pointer ${bookingStatusFilter === 'confirmed' ? 'ring-2 ring-green-500' : ''}`}
+              onClick={() => setBookingStatusFilter('confirmed')}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600">Confirmed</p>
@@ -238,9 +281,10 @@ export function Analytics() {
                 </div>
               </div>
             </div>
-
-            {/* Cancelled Bookings */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-red-100">
+            <div
+              className={`bg-white rounded-xl p-6 shadow-lg border-2 border-red-100 cursor-pointer ${bookingStatusFilter === 'cancelled' ? 'ring-2 ring-red-500' : ''}`}
+              onClick={() => setBookingStatusFilter('cancelled')}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-600">Cancelled</p>
@@ -325,154 +369,6 @@ export function Analytics() {
             </div>
           </div>
 
-          {/* Upcoming & Past Bookings Section */}
-          <div className="bg-white rounded-xl shadow-lg border-2 border-purple-100 overflow-hidden">
-            {/* Tab Headers */}
-            <div className="flex border-b-2 border-purple-100">
-              <button
-                onClick={() => setActiveTab('upcoming')}
-                className={`flex-1 px-6 py-4 text-sm font-bold transition-all ${
-                  activeTab === 'upcoming'
-                    ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-600 -mb-0.5'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                📅 Upcoming Bookings ({upcomingBookings.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('past')}
-                className={`flex-1 px-6 py-4 text-sm font-bold transition-all ${
-                  activeTab === 'past'
-                    ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-600 -mb-0.5'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                📋 Past Bookings ({pastBookings.length})
-              </button>
-            </div>
-
-            {/* Bookings List */}
-            <div className="p-6">
-              {activeTab === 'upcoming' && (
-                <>
-                  {upcomingBookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <p className="text-gray-500 font-medium">No upcoming bookings in this period</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {upcomingBookings.slice(0, 10).map((booking: any) => (
-                        <div
-                          key={booking.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl gap-4"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-lg">👤</span>
-                              <span className="font-bold text-gray-900">{booking.guest_name}</span>
-                              <span className="px-2 py-0.5 text-xs font-semibold bg-green-200 text-green-800 rounded-full">
-                                {booking.status}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600">{booking.guest_email}</p>
-                            <p className="text-sm text-purple-700 font-medium mt-1">
-                              {booking.event_types?.title || 'Event'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-gray-900">
-                              {formatInTimeZone(parseISO(booking.start_time), profile?.time_zone || 'UTC', 'MMM d, yyyy')}
-                            </p>
-                            <p className="text-sm text-purple-600 font-medium">
-                              {formatInTimeZone(parseISO(booking.start_time), profile?.time_zone || 'UTC', 'h:mm a')}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {booking.event_types?.duration || 30} min
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      {upcomingBookings.length > 10 && (
-                        <p className="text-center text-sm text-gray-500 pt-2">
-                          And {upcomingBookings.length - 10} more upcoming bookings...
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {activeTab === 'past' && (
-                <>
-                  {pastBookings.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <p className="text-gray-500 font-medium">No past bookings in this period</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {pastBookings.slice(0, 10).map((booking: any) => (
-                        <div
-                          key={booking.id}
-                          className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl gap-4 ${
-                            booking.status === 'cancelled'
-                              ? 'bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200'
-                              : 'bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200'
-                          }`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-lg">👤</span>
-                              <span className="font-bold text-gray-900">{booking.guest_name}</span>
-                              <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                                booking.status === 'cancelled'
-                                  ? 'bg-red-200 text-red-800'
-                                  : booking.status === 'completed'
-                                  ? 'bg-blue-200 text-blue-800'
-                                  : 'bg-gray-200 text-gray-800'
-                              }`}>
-                                {booking.status}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600">{booking.guest_email}</p>
-                            <p className="text-sm text-purple-700 font-medium mt-1">
-                              {booking.event_types?.title || 'Event'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-gray-900">
-                              {formatInTimeZone(parseISO(booking.start_time), profile?.time_zone || 'UTC', 'MMM d, yyyy')}
-                            </p>
-                            <p className="text-sm text-gray-600 font-medium">
-                              {formatInTimeZone(parseISO(booking.start_time), profile?.time_zone || 'UTC', 'h:mm a')}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {booking.event_types?.duration || 30} min
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      {pastBookings.length > 10 && (
-                        <p className="text-center text-sm text-gray-500 pt-2">
-                          And {pastBookings.length - 10} more past bookings...
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-
           {/* CSV & PDF Export */}
           <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 shadow-lg border-2 border-purple-200">
             <div className="flex flex-col gap-4">
@@ -553,6 +449,38 @@ export function Analytics() {
             </div>
           </div>
         </>
+      ) : (
+        // Bookings Tab
+        <div>
+          <h2 className="text-2xl font-bold mb-4">All Bookings</h2>
+          <div className="space-y-3">
+            {bookingsData.filter(b => bookingStatusFilter === 'all' ? true : b.status === bookingStatusFilter).length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No bookings found.</div>
+            ) : (
+              bookingsData.filter(b => bookingStatusFilter === 'all' ? true : b.status === bookingStatusFilter).map((booking: any) => (
+                <div key={booking.id} className="flex items-start space-x-3 p-4 bg-gradient-to-r from-purple-50 to-white rounded-lg border border-purple-100 hover:border-purple-300 transition-all">
+                  <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
+                    booking.status === 'confirmed' ? 'bg-green-500' :
+                    booking.status === 'cancelled' ? 'bg-red-500' : 'bg-yellow-500'
+                  }`}></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{booking.guest_name}</p>
+                    <p className="text-xs text-purple-600 font-medium mt-0.5">{booking.event_types?.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatInTimeZone(parseISO(booking.start_time), profile?.time_zone || 'UTC', 'PPpp')} • <span className="capitalize">{booking.status}</span>
+                    </p>
+                    {booking.notes && (
+                      <p className="text-xs text-gray-700 mt-1">📝 {booking.notes}</p>
+                    )}
+                    {booking.meeting_method && (
+                      <p className="text-xs text-blue-700 mt-1">🔗 {booking.meeting_method}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
-import type { EventType } from '../lib/database.types';
+import type { EventType, Contact } from '../lib/database.types';
 import { format, addMinutes, addDays } from 'date-fns';
 import { sendBookingConfirmation, sendBookingNotificationToHost } from '../services/emailService';
+import { getContacts, createContact } from '../services/contactsService';
 
 export function BookAMeet() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -26,7 +28,10 @@ export function BookAMeet() {
     send_invitation: true,
   });
 
-  // Load user's event types
+  const [contactMode, setContactMode] = useState<'existing' | 'new'>('existing');
+  const [selectedContactId, setSelectedContactId] = useState<string>('');
+
+  // Load user's event types and contacts
   useEffect(() => {
     if (!user) return;
 
@@ -50,8 +55,32 @@ export function BookAMeet() {
       }
     };
 
+    const loadContacts = async () => {
+      try {
+        const contactData = await getContacts(user.id);
+        setContacts(contactData);
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+        setContacts([]);
+      }
+    };
+
     loadEventTypes();
+    loadContacts();
   }, [user]);
+
+  // Auto-fill form data when contact is selected
+  useEffect(() => {
+    if (contactMode === 'existing' && selectedContactId) {
+      const contact = contacts.find(c => c.id === selectedContactId);
+      if (contact) {
+        setFormData(prev => ({ ...prev, prospect_name: contact.full_name, prospect_email: contact.email }));
+      }
+    }
+    if (contactMode === 'new') {
+      setFormData(prev => ({ ...prev, prospect_name: '', prospect_email: '' }));
+    }
+  }, [contactMode, selectedContactId, contacts]);
 
   const validateForm = () => {
     if (!formData.event_type_id) {
@@ -186,6 +215,15 @@ export function BookAMeet() {
         }
       }
 
+      // Save new contact if in 'new' mode and not already in contacts
+      if (contactMode === 'new' && contacts.every(c => c.email !== formData.prospect_email)) {
+        await createContact(user.id, {
+          full_name: formData.prospect_name,
+          email: formData.prospect_email,
+          phone_number: '',
+        });
+      }
+
       setSuccessMessage(`Meeting booked successfully with ${formData.prospect_name}!${formData.send_invitation ? ' Invitation email sent.' : ''}`);
       
       // Reset form
@@ -198,6 +236,8 @@ export function BookAMeet() {
         notes: '',
         send_invitation: true,
       });
+      setContactMode('existing');
+      setSelectedContactId('');
 
       // Scroll to top to show success message
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -376,7 +416,30 @@ export function BookAMeet() {
         {/* Prospect Details */}
         <div className="space-y-6 p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
           <h3 className="text-base font-semibold text-purple-900">👤 Prospect Information</h3>
-          
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">Select Contact</label>
+            <div className="flex gap-3">
+              <select
+                value={contactMode === 'existing' ? selectedContactId : ''}
+                onChange={e => {
+                  if (e.target.value === 'new') {
+                    setContactMode('new');
+                    setSelectedContactId('');
+                  } else {
+                    setContactMode('existing');
+                    setSelectedContactId(e.target.value);
+                  }
+                }}
+                className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white"
+              >
+                <option value="">Select from contacts...</option>
+                {contacts.map(contact => (
+                  <option key={contact.id} value={contact.id}>{contact.full_name} ({contact.email})</option>
+                ))}
+                <option value="new">➕ Add new contact</option>
+              </select>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="prospect_name" className="block text-sm font-semibold text-gray-900 mb-2">
@@ -390,9 +453,9 @@ export function BookAMeet() {
                 className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white"
                 placeholder="John Doe"
                 required
+                disabled={contactMode === 'existing'}
               />
             </div>
-            
             <div>
               <label htmlFor="prospect_email" className="block text-sm font-semibold text-gray-900 mb-2">
                 Prospect Email <span className="text-purple-600">*</span>
@@ -405,6 +468,7 @@ export function BookAMeet() {
                 className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white"
                 placeholder="john@company.com"
                 required
+                disabled={contactMode === 'existing'}
               />
             </div>
           </div>

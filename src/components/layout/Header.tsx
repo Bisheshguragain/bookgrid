@@ -61,9 +61,9 @@ export function Header() {
           <div className="flex items-center">
             <Link to="/app/dashboard" className="flex items-center">
               <img 
-                src="/BookGrid logo.2.jpg" 
-                alt="BookGrid" 
-                className="h-12"
+                src="/BookAgreed%20logo.jpg" 
+                alt="BookAgreed" 
+                className="h-16 w-auto"
               />
             </Link>
           </div>

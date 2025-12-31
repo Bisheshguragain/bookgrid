@@ -90,7 +90,7 @@ export function Dashboard() {
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
-          .limit(5);
+          .limit(3); // Show only 3 most recent bookings
 
         if (recentError) throw recentError;
         setRecentBookings(recent as BookingWithEventType[] || []);
@@ -124,75 +124,6 @@ export function Dashboard() {
           Here's what's happening with your calendar today
         </p>
       </div>
-
-      {/* Subscription Plan Banner */}
-      {subscription ? (
-        <div className={`rounded-xl p-6 shadow-lg border-2 ${
-          subscription.plan === 'free'
-            ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
-            : subscription.plan === 'pro'
-            ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
-            : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200'
-        }`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-xl font-bold text-gray-900">
-                  {subscription.plan === 'free' && '🆓 Free Plan'}
-                  {subscription.plan === 'pro' && '⭐ Pro Plan'}
-                  {subscription.plan === 'business' && '💼 Business Plan'}
-                </h3>
-                {subscription.plan !== 'free' && (
-                  <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                    ACTIVE
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <strong>{subscription.limits.current_event_types}</strong>/{subscription.limits.max_event_types === -1 ? '∞' : subscription.limits.max_event_types} event types
-                </span>
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <strong>{subscription.limits.current_bookings_this_month}</strong>/{subscription.limits.max_bookings_per_month === -1 ? '∞' : subscription.limits.max_bookings_per_month} bookings this month
-                </span>
-              </div>
-              {subscription.plan === 'free' && (
-                <p className="text-sm text-gray-600 mt-3">
-                  Upgrade to unlock more event types, analytics, and advanced features!
-                </p>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <Link
-                to="/app/pricing"
-                className={`px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg ${
-                  subscription.plan === 'free'
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
-                    : subscription.plan === 'pro'
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
-                    : 'bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200'
-                }`}
-              >
-                {subscription.plan === 'free' && '🚀 Upgrade Now'}
-                {subscription.plan === 'pro' && '⬆️ Upgrade to Business'}
-                {subscription.plan === 'business' && '✓ Current Plan'}
-              </Link>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-          <p className="text-yellow-800 text-sm">
-            ⚠️ Subscription data not loaded. Check console for errors.
-          </p>
-        </div>
-      )}
 
       {/* New Booking Notification Badge */}
       {newBookingCount > 0 && (
@@ -393,7 +324,7 @@ export function Dashboard() {
               <span className="w-1 h-6 bg-gradient-to-b from-purple-500 to-purple-600 rounded-full mr-3"></span>
               Recent Bookings
             </h2>
-            <Link to="/app/event-types" className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
+            <Link to="/app/analytics?tab=bookings" className="text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
               View all →
             </Link>
           </div>
@@ -416,15 +347,17 @@ export function Dashboard() {
                     booking.status === 'cancelled' ? 'bg-red-500' : 'bg-yellow-500'
                   }`}></div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {booking.guest_name}
-                    </p>
-                    <p className="text-xs text-purple-600 font-medium mt-0.5">
-                      {booking.event_types.title}
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{booking.guest_name}</p>
+                    <p className="text-xs text-purple-600 font-medium mt-0.5">{booking.event_types.title}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       {formatDateTime(booking.start_time, profile?.time_zone)} • <span className="capitalize">{booking.status}</span>
                     </p>
+                    {booking.notes && (
+                      <p className="text-xs text-gray-700 mt-1">📝 {booking.notes}</p>
+                    )}
+                    {booking.meeting_method && (
+                      <p className="text-xs text-blue-700 mt-1">🔗 {booking.meeting_method}</p>
+                    )}
                   </div>
                 </div>
               ))

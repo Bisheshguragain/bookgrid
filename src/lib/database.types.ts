@@ -124,6 +124,7 @@ export interface Database {
           time_zone: string
           avatar_url: string | null
           default_meeting_duration: number
+          company_name: string | null // Optional company name
           subscription_plan: 'free' | 'pro' | 'business'
           subscription_status: 'active' | 'cancelled' | 'expired' | 'trial'
           subscription_start_date: string
@@ -149,6 +150,7 @@ export interface Database {
           time_zone?: string
           avatar_url?: string | null
           default_meeting_duration?: number
+          company_name?: string | null // Optional company name
           subscription_plan?: 'free' | 'pro' | 'business'
           subscription_status?: 'active' | 'cancelled' | 'expired' | 'trial'
           subscription_start_date?: string
@@ -174,6 +176,7 @@ export interface Database {
           time_zone?: string
           avatar_url?: string | null
           default_meeting_duration?: number
+          company_name?: string | null // Optional company name
           subscription_plan?: 'free' | 'pro' | 'business'
           subscription_status?: 'active' | 'cancelled' | 'expired' | 'trial'
           subscription_start_date?: string
@@ -300,6 +303,7 @@ export interface Database {
           end_time: string
           status: 'confirmed' | 'cancelled' | 'rescheduled'
           notes: string | null
+          meeting_method: string | null // Optional meeting method
           reschedule_token: string
           cancel_token: string
           guest_time_zone: string
@@ -316,6 +320,7 @@ export interface Database {
           end_time: string
           status?: 'confirmed' | 'cancelled' | 'rescheduled'
           notes?: string | null
+          meeting_method?: string | null // Optional meeting method
           reschedule_token?: string
           cancel_token?: string
           guest_time_zone?: string
@@ -332,6 +337,7 @@ export interface Database {
           end_time?: string
           status?: 'confirmed' | 'cancelled' | 'rescheduled'
           notes?: string | null
+          meeting_method?: string | null // Optional meeting method
           reschedule_token?: string
           cancel_token?: string
           guest_time_zone?: string
@@ -520,6 +526,7 @@ export interface UserProfileType {
   time_zone: string
   avatar_url: string | null
   default_meeting_duration: number
+  company_name: string | null // Optional company name
   created_at: string
   updated_at: string
   // Subscription fields
@@ -577,6 +584,7 @@ export interface BookingRecord {
   end_time: string
   status?: 'confirmed' | 'cancelled' | 'rescheduled'
   notes?: string | null
+  meeting_method?: string | null // Add meeting_method to BookingRecord
   reschedule_token?: string
   cancel_token?: string
   guest_time_zone?: string

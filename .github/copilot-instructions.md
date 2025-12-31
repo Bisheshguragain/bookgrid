@@ -3,7 +3,7 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
 ## Project Overview
-This is BookGrid - a production-grade scheduling application built with React, TypeScript, and Vite. The application includes:
+This is BookAgreed - a production-grade scheduling application built with React, TypeScript, and Vite. The application includes:
 
 - User authentication and profile management
 - Event type creation and management

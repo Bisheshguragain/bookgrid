@@ -19,6 +19,7 @@ export function Settings() {
     username: '',
     time_zone: 'America/New_York',
     default_meeting_duration: 30,
+    company_name: '', // Add company_name to form state
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,6 +33,7 @@ export function Settings() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showDowngradeModal, setShowDowngradeModal] = useState(false);
   const [selectedDowngradePlan, setSelectedDowngradePlan] = useState<'free' | 'pro' | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { profile, updateProfile, user } = useAuthStore();
 
@@ -42,6 +44,7 @@ export function Settings() {
         username: profile.username || '',
         time_zone: profile.time_zone,
         default_meeting_duration: profile.default_meeting_duration,
+        company_name: profile.company_name || '', // Load company_name
       });
     }
   }, [profile]);
@@ -72,6 +75,10 @@ export function Settings() {
     
     if (formData.username && !/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
       newErrors.username = 'Username can only contain letters, numbers, underscores, and hyphens';
+    }
+    
+    if (formData.company_name && formData.company_name.length > 100) {
+      newErrors.company_name = 'Company name must be 100 characters or less';
     }
     
     setErrors(newErrors);
@@ -127,6 +134,7 @@ export function Settings() {
         username: formData.username?.toLowerCase(),
         time_zone: formData.time_zone,
         default_meeting_duration: formData.default_meeting_duration,
+        company_name: formData.company_name || null, // Save company_name
       };
 
       const { error } = await updateProfile(updateData);
@@ -293,7 +301,7 @@ export function Settings() {
             </label>
             <div className="mt-1 flex rounded-xl shadow-sm">
               <span className="inline-flex items-center px-4 rounded-l-xl border-2 border-r-0 border-gray-200 bg-purple-50 text-purple-700 text-sm font-medium">
-                bookgrid.com/
+                bookagreed.com/
               </span>
               <input
                 type="text"
@@ -360,6 +368,28 @@ export function Settings() {
             <p className="mt-2 text-sm text-gray-600">
               This will be the default duration when creating new event types
             </p>
+          </div>
+
+          {/* Company Name */}
+          <div>
+            <label htmlFor="company_name" className="block text-sm font-semibold text-gray-900 mb-2">
+              Company Name <span className="text-gray-500">(optional)</span>
+            </label>
+            <input
+              type="text"
+              id="company_name"
+              name="company_name"
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 transition-all ${
+                errors.company_name ? 'border-red-500' : 'border-gray-200 focus:border-purple-500'
+              }`}
+              value={formData.company_name || ''}
+              onChange={handleChange}
+              placeholder="Enter your company name"
+              maxLength={100}
+            />
+            {errors.company_name && (
+              <p className="mt-2 text-sm text-red-600 font-medium">{errors.company_name}</p>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -549,25 +579,33 @@ export function Settings() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-red-200">
-        <h2 className="text-xl font-bold text-red-900 mb-6">⚠️ Danger Zone</h2>
-        
+      <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-red-200 mt-8">
+        <h2 className="text-xl font-bold text-red-700 mb-6">⚠️ Danger Zone</h2>
         <div className="space-y-4">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 bg-red-50 rounded-xl border-2 border-red-200">
-            <div>
-              <h3 className="text-sm font-bold text-red-900 mb-1">Delete Account</h3>
-              <p className="text-sm text-red-700">
-                Permanently delete your account and all associated data
-              </p>
+          <p className="text-red-600 font-semibold">Delete Account</p>
+          <p className="text-sm text-gray-700 mb-2">Permanently delete your account and all associated data.</p>
+          <button
+            type="button"
+            className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl shadow-lg hover:from-red-700 hover:to-red-800 transition-all"
+            onClick={() => setShowDeleteModal(true)}
+          >
+            🗑️ Delete Account
+          </button>
+          {showDeleteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white rounded-xl p-8 shadow-xl max-w-md w-full">
+                <h3 className="text-lg font-bold text-red-700 mb-4">Delete Account</h3>
+                <p className="mb-4 text-gray-800">To permanently delete your account, please email <a href="mailto:support@bookagreed.com" className="text-purple-700 underline">support@bookagreed.com</a> and mention your reason for closing in a few words. Our team will process your request and confirm via email.</p>
+                <button
+                  type="button"
+                  className="mt-4 px-6 py-2 bg-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-300"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              className="px-6 py-3 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap"
-              onClick={() => alert('Account deletion is not implemented in this demo')}
-            >
-              🗑️ Delete Account
-            </button>
-          </div>
+          )}
         </div>
       </div>
 

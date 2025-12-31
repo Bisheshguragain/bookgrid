@@ -1,4 +1,4 @@
-# BookGrid - robots.txt
+# BookAgreed - robots.txt
 # https://www.robotstxt.org/
 
 User-agent: *
@@ -26,4 +26,4 @@ Disallow: /src/
 Crawl-delay: 1
 
 # Sitemap (add when you have one)
-# Sitemap: https://bookgrid.com/sitemap.xml
+Sitemap: https://bookagreed.com/sitemap.xml

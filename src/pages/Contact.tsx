@@ -33,7 +33,7 @@ export function Contact() {
       <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link to="/" className="flex items-center">
-            <img src="/BookGrid logo.2.jpg" alt="BookGrid" className="h-14" />
+            <img src="/BookAgreed%20logo.jpg" alt="BookAgreed" className="h-14" />
           </Link>
           <div className="flex items-center space-x-4">
             <Link to="/help" className="text-gray-700 hover:text-gray-900 font-medium">
