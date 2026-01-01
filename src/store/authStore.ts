@@ -89,27 +89,8 @@ export const useAuthStore = create<AuthState>()(
 
           if (error) throw error;
 
-          // Create user profile
-          if (data.user) {
-            const { error: profileError } = await supabase
-              .from('users_profile')
-              .insert({
-                id: data.user.id,
-                email: data.user.email!,
-                full_name: fullName,
-              });
-
-            if (profileError) throw profileError;
-
-            // Create default global settings
-            await supabase
-              .from('global_settings')
-              .insert({
-                user_id: data.user.id,
-                minimum_notice_hours: 24,
-                max_events_per_day: 10,
-              });
-          }
+          // Do NOT create user profile here. Wait for email confirmation and first login.
+          // Show a message in your UI: "Please check your email to confirm your account."
 
           return { error: null };
         } catch (error) {
@@ -135,27 +116,44 @@ export const useAuthStore = create<AuthState>()(
 
       loadProfile: async () => {
         const { user, profile: currentProfile, _loadingProfile } = get();
-        
         // Prevent concurrent profile loads
         if (!user || _loadingProfile || isLoadingProfile) {
           return;
         }
-
         try {
           isLoadingProfile = true;
           set({ _loadingProfile: true });
-
           const { data, error } = await supabase
             .from('users_profile')
             .select('*')
             .eq('id', user.id)
             .single();
-
+          if (error && error.code === 'PGRST116') {
+            // Profile does not exist yet: create it now (first login after confirmation)
+            const { error: profileError } = await supabase
+              .from('users_profile')
+              .insert({
+                id: user.id,
+                email: user.email!,
+                full_name: user.user_metadata?.full_name || '',
+              });
+            if (profileError) {
+              console.error('Error creating profile after confirmation:', profileError);
+              throw profileError;
+            }
+            // Try loading again after creation
+            const { data: newProfile } = await supabase
+              .from('users_profile')
+              .select('*')
+              .eq('id', user.id)
+              .single();
+            set({ profile: newProfile });
+            return;
+          }
           if (error && error.code !== 'PGRST116') {
             console.error('Error loading profile:', error);
             throw error;
           }
-
           // Only update if critical fields have changed to prevent infinite loops
           const hasChanged = !currentProfile ||
             currentProfile.email !== data?.email ||
@@ -163,7 +161,6 @@ export const useAuthStore = create<AuthState>()(
             currentProfile.role !== data?.role ||
             currentProfile.subscription_plan !== data?.subscription_plan ||
             currentProfile.subscription_status !== data?.subscription_status;
-
           if (hasChanged && data) {
             set({ profile: data });
           }
