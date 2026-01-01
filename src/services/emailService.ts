@@ -492,6 +492,133 @@ export async function sendPasswordResetEmail(
 }
 
 /**
+ * Send contact form notification to superadmin
+ */
+export async function sendContactFormToSuperadmin({ name, email, subject, message }: { name: string; email: string; subject: string; message: string }) {
+  const superadminEmail = import.meta.env.VITE_SUPERADMIN_EMAIL || SUPPORT_EMAIL;
+  const html = emailWrapper(`
+    <h2>New Contact Form Submission</h2>
+    <p><strong>Name:</strong> ${name}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Subject:</strong> ${subject}</p>
+    <p><strong>Message:</strong></p>
+    <p>${message.replace(/\n/g, '<br/>')}</p>
+  `);
+  return sendEmail({
+    to: superadminEmail,
+    subject: `[Contact Form] ${subject}`,
+    html,
+    replyTo: email,
+  });
+}
+
+/**
+ * Notify superadmin of user events (signup, upgrade, downgrade, cancel, etc)
+ */
+export async function notifySuperadminUserEvent({
+  type,
+  user,
+  details = {},
+}: {
+  type: 'signup' | 'upgrade' | 'downgrade' | 'cancel' | 'reactivate' | 'delete' | 'other';
+  user: { id: string; email: string; full_name?: string; plan?: string; status?: string };
+  details?: Record<string, any>;
+}) {
+  const superadminEmail = import.meta.env.VITE_SUPERADMIN_EMAIL || SUPPORT_EMAIL;
+  let subject = '';
+  let html = '';
+  switch (type) {
+    case 'signup':
+      subject = `[New Signup] ${user.email}`;
+      html = emailWrapper(`
+        <h2>New User Signup</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Name:</strong> ${user.full_name || ''}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>Plan:</strong> ${user.plan || 'free'}</p>
+        <p><strong>Status:</strong> ${user.status || ''}</p>
+      `);
+      break;
+    case 'upgrade':
+      subject = `[Upgrade] ${user.email}`;
+      html = emailWrapper(`
+        <h2>User Upgraded Subscription</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Name:</strong> ${user.full_name || ''}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>New Plan:</strong> ${user.plan}</p>
+        <p><strong>Status:</strong> ${user.status || ''}</p>
+        <p><strong>Details:</strong> ${JSON.stringify(details)}</p>
+      `);
+      break;
+    case 'downgrade':
+      subject = `[Downgrade] ${user.email}`;
+      html = emailWrapper(`
+        <h2>User Downgraded Subscription</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Name:</strong> ${user.full_name || ''}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>New Plan:</strong> ${user.plan}</p>
+        <p><strong>Status:</strong> ${user.status || ''}</p>
+        <p><strong>Details:</strong> ${JSON.stringify(details)}</p>
+      `);
+      break;
+    case 'cancel':
+      subject = `[Cancel Subscription] ${user.email}`;
+      html = emailWrapper(`
+        <h2>User Cancelled Subscription</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Name:</strong> ${user.full_name || ''}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>Plan:</strong> ${user.plan}</p>
+        <p><strong>Status:</strong> ${user.status || ''}</p>
+        <p><strong>Details:</strong> ${JSON.stringify(details)}</p>
+      `);
+      break;
+    case 'reactivate':
+      subject = `[Reactivate Subscription] ${user.email}`;
+      html = emailWrapper(`
+        <h2>User Reactivated Subscription</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Name:</strong> ${user.full_name || ''}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>Plan:</strong> ${user.plan}</p>
+        <p><strong>Status:</strong> ${user.status || ''}</p>
+        <p><strong>Details:</strong> ${JSON.stringify(details)}</p>
+      `);
+      break;
+    case 'delete':
+      subject = `[Account Deleted] ${user.email}`;
+      html = emailWrapper(`
+        <h2>User Deleted Account</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Name:</strong> ${user.full_name || ''}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>Plan:</strong> ${user.plan}</p>
+        <p><strong>Status:</strong> ${user.status || ''}</p>
+        <p><strong>Details:</strong> ${JSON.stringify(details)}</p>
+      `);
+      break;
+    default:
+      subject = `[User Event] ${user.email}`;
+      html = emailWrapper(`
+        <h2>User Event: ${type}</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Name:</strong> ${user.full_name || ''}</p>
+        <p><strong>User ID:</strong> ${user.id}</p>
+        <p><strong>Plan:</strong> ${user.plan}</p>
+        <p><strong>Status:</strong> ${user.status || ''}</p>
+        <p><strong>Details:</strong> ${JSON.stringify(details)}</p>
+      `);
+  }
+  return sendEmail({
+    to: superadminEmail,
+    subject,
+    html,
+  });
+}
+
+/**
  * Generic email sender using Brevo API
  * In development without API key, logs the email
  * In production with API key, sends via Brevo

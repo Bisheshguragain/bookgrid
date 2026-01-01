@@ -135,6 +135,31 @@ export function Landing() {
         </div>
       </div>
 
+      {/* Mobile menu overlay */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex md:hidden" onClick={() => setMenuOpen(false)}>
+          <nav
+            className="bg-white w-11/12 max-w-xs h-full shadow-xl p-6 flex flex-col gap-6 animate-slide-in-left relative justify-center items-center"
+            onClick={e => e.stopPropagation()}
+            aria-label="Mobile navigation menu"
+          >
+            <button
+              className="absolute top-4 right-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-600"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Close menu"
+            >
+              <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <Link to="/login" className="w-full text-center text-primary-700 hover:text-primary-900 font-bold text-2xl py-4 bg-primary-50 rounded-lg shadow mb-4 transition-colors" onClick={() => setMenuOpen(false)}>
+              Sign In
+            </Link>
+            <Link to="/signup" className="w-full text-center bg-primary-600 hover:bg-primary-700 text-white px-6 py-4 rounded-lg font-bold text-2xl shadow-lg transition-colors" onClick={() => setMenuOpen(false)}>
+              Get Started
+            </Link>
+          </nav>
+        </div>
+      )}
+
       {/* Hero Section */}
       <div
         className="w-full flex flex-col items-center justify-center text-center px-4"
@@ -185,23 +210,23 @@ export function Landing() {
               Powerful features designed for modern teams and entrepreneurs
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <div 
                   key={index}
                   tabIndex={0}
-                  className="group relative bg-gradient-to-br from-purple-100 to-purple-200 p-8 rounded-2xl border-2 border-purple-200 hover:border-primary-600 focus:border-primary-700 hover:shadow-2xl focus:shadow-2xl transition-all duration-300 outline-none cursor-pointer feature-box"
+                  className="group relative bg-gradient-to-br from-purple-100 to-purple-200 p-8 rounded-2xl border-2 border-purple-200 hover:border-primary-600 focus:border-primary-700 hover:shadow-2xl focus:shadow-2xl transition-all duration-300 outline-none cursor-pointer feature-box w-full max-w-xs mx-auto"
                 >
                   {/* Icon container */}
-                  <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center mb-6 group-hover:scale-110 group-focus:scale-110 transition-transform duration-300 border-2 border-purple-200 group-hover:border-primary-600 group-focus:border-primary-700">
+                  <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center mb-6 group-hover:scale-110 group-focus:scale-110 transition-transform duration-300 border-2 border-purple-200 group-hover:border-primary-600 group-focus:border-primary-700 mx-auto">
                     <Icon className="h-8 w-8 text-primary-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-primary-700 mb-3 group-hover:text-primary-800 group-focus:text-primary-900 transition-colors">
+                  <h3 className="text-xl font-bold text-primary-700 mb-3 group-hover:text-primary-800 group-focus:text-primary-900 transition-colors text-center">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-700 leading-relaxed group-hover:text-gray-900 group-focus:text-gray-900 font-medium">
+                  <p className="text-gray-700 leading-relaxed group-hover:text-gray-900 group-focus:text-gray-900 font-medium text-center">
                     {feature.description}
                   </p>
                   {/* Decorative accent */}
@@ -346,11 +371,11 @@ export function Landing() {
               No hidden fees. Cancel anytime. All plans include core scheduling features.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="flex flex-col items-center justify-center gap-8 md:grid md:grid-cols-3 md:gap-8 max-w-6xl mx-auto">
             {/* Free Plan */}
-            <div className="p-8 rounded-xl border-2 border-gray-200 bg-white hover:shadow-lg transition-all">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
-              <div className="mb-6">
+            <div className="p-8 rounded-xl border-2 border-gray-200 bg-white hover:shadow-lg transition-all w-full max-w-xs mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Free</h3>
+              <div className="mb-6 text-center">
                 <p className="text-5xl font-bold text-primary-600">
                   £0
                   <span className="text-lg text-gray-600">/month</span>
@@ -385,14 +410,14 @@ export function Landing() {
             </div>
 
             {/* Pro Plan - Highlighted */}
-            <div className="p-8 rounded-xl border-2 border-primary-600 bg-gradient-to-br from-primary-50 to-white shadow-xl md:scale-105 relative">
+            <div className="p-8 rounded-xl border-2 border-primary-600 bg-gradient-to-br from-primary-50 to-white shadow-xl md:scale-105 relative w-full max-w-xs mx-auto">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-primary-600 text-white text-xs font-bold px-4 py-1 rounded-full">
                   MOST POPULAR
                 </span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
-              <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Pro</h3>
+              <div className="mb-6 text-center">
                 <p className="text-5xl font-bold text-primary-600">
                   £12
                   <span className="text-lg text-gray-600">/month</span>
@@ -435,9 +460,9 @@ export function Landing() {
             </div>
 
             {/* Business Plan */}
-            <div className="p-8 rounded-xl border-2 border-gray-200 bg-white hover:shadow-lg transition-all">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Business</h3>
-              <div className="mb-6">
+            <div className="p-8 rounded-xl border-2 border-gray-200 bg-white hover:shadow-lg transition-all w-full max-w-xs mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Business</h3>
+              <div className="mb-6 text-center">
                 <p className="text-5xl font-bold text-primary-600">
                   £24
                   <span className="text-lg text-gray-600">/month</span>

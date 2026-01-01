@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { UserProfile } from '../lib/database.types';
+import { notifySuperadminUserEvent } from '../services/emailService';
 
 interface AuthState {
   user: User | null;
@@ -77,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
 
       signUp: async (email: string, password: string, fullName: string) => {
         try {
-          const { error } = await supabase.auth.signUp({
+          const { error, data } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -88,6 +89,18 @@ export const useAuthStore = create<AuthState>()(
           });
 
           if (error) throw error;
+
+          // Notify superadmin of new signup
+          await notifySuperadminUserEvent({
+            type: 'signup',
+            user: {
+              id: data?.user?.id || '',
+              email,
+              full_name: fullName,
+              plan: 'free',
+              status: 'pending',
+            },
+          });
 
           // Do NOT create user profile here. Wait for email confirmation and first login.
           // Show a message in your UI: "Please check your email to confirm your account."

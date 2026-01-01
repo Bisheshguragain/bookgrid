@@ -5,6 +5,7 @@
 
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
+import { notifySuperadminUserEvent } from './emailService';
 
 type SubscriptionPlan = 'free' | 'pro' | 'business';
 type SubscriptionPlanRow = Database['public']['Tables']['subscription_plans']['Row'];
@@ -226,6 +227,14 @@ export async function upgradeSubscription(
       .eq('id', userId);
 
     if (error) throw error;
+
+    // Notify superadmin of upgrade
+    await notifySuperadminUserEvent({
+      type: 'upgrade',
+      user: { id: userId, email: '', plan: newPlan, status: 'active' },
+      details: {},
+    });
+
     return { success: true };
   } catch (error) {
     console.error('Error upgrading subscription:', error);
@@ -276,6 +285,13 @@ export async function downgradeSubscription(
       .eq('id', userId);
 
     if (error) throw error;
+
+    // Notify superadmin of downgrade
+    await notifySuperadminUserEvent({
+      type: 'downgrade',
+      user: { id: userId, email: '', plan: newPlan, status: 'active' },
+      details: {},
+    });
 
     return { success: true, effectiveDate };
   } catch (error) {

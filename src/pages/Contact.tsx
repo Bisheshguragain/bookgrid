@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { sendContactFormToSuperadmin } from '../services/emailService';
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -14,10 +15,11 @@ export function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    try {
+      await sendContactFormToSuperadmin(formData);
+    } catch (err) {
+      // Optionally handle error (show error message)
+    }
     setIsSubmitting(false);
     setIsSubmitted(true);
     setFormData({ name: '', email: '', subject: '', message: '' });
@@ -266,7 +268,7 @@ export function Contact() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
               <h4 className="text-white font-bold mb-4">Product</h4>
               <ul className="space-y-2">
@@ -300,7 +302,7 @@ export function Contact() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center">
-            <p>&copy; 2025 BookGrid. All rights reserved.</p>
+            <p>&copy; 2025 BookAgreed. All rights reserved.</p>
           </div>
         </div>
       </footer>
