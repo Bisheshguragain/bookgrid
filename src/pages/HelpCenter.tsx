@@ -23,11 +23,11 @@ const faqs: FAQ[] = [
   {
     category: 'Getting Started',
     question: 'What is a booking link and how do I share it?',
-    answer: 'Your booking link is a unique URL (like bookgrid.com/u/yourname) that you can share with clients or prospects. They can visit this link anytime to see your available times and book a meeting with you. Find your link in the dashboard or under each event type.',
+    answer: 'Your booking link is a unique URL (like bookagreed.com/u/yourname) that you can share with clients or prospects. They can visit this link anytime to see your available times and book a meeting with you. Find your link in the dashboard or under each event type.',
   },
   {
     category: 'Getting Started',
-    question: 'Can I use BookGrid for free?',
+    question: 'Can I use BookAgreed for free?',
     answer: 'Yes! We offer a generous free plan that includes up to 2 event types, 20 bookings per month, email reminders, and a mobile-friendly booking page. It\'s perfect for getting started. Upgrade anytime to unlock more features.',
   },
   
@@ -45,12 +45,12 @@ const faqs: FAQ[] = [
   {
     category: 'Availability & Scheduling',
     question: 'What happens if someone books during a time I\'m busy?',
-    answer: 'BookGrid automatically blocks times that are already booked, so double-bookings won\'t happen. If you integrate with Google Calendar, we also respect events from your personal calendar.',
+    answer: 'BookAgreed automatically blocks times that are already booked, so double-bookings won\'t happen. If you integrate with Google Calendar, we also respect events from your personal calendar.',
   },
   {
     category: 'Availability & Scheduling',
     question: 'How do time zones work?',
-    answer: 'BookGrid automatically detects your guests\' time zones and shows them available times in their local time. This eliminates confusion and scheduling errors across different time zones. You can also set your default time zone in Settings.',
+    answer: 'BookAgreed automatically detects your guests\' time zones and shows them available times in their local time. This eliminates confusion and scheduling errors across different time zones. You can also set your default time zone in Settings.',
   },
   {
     category: 'Availability & Scheduling',
@@ -121,7 +121,7 @@ const faqs: FAQ[] = [
   {
     category: 'Account & Billing',
     question: 'How do I delete my account?',
-    answer: 'If you need to delete your account, please contact our support team at support@bookgrid.com. We\'ll process your request and permanently delete all your data within 30 days, in compliance with data protection regulations.',
+    answer: 'If you need to delete your account, please contact our support team at support@bookagreed.com. We\'ll process your request and permanently delete all your data within 30 days, in compliance with data protection regulations.',
   },
   
   // Security & Privacy
@@ -138,7 +138,7 @@ const faqs: FAQ[] = [
   {
     category: 'Security & Privacy',
     question: 'Are you GDPR compliant?',
-    answer: 'Yes, BookGrid is fully GDPR compliant. You can request a copy of your data or deletion of your account at any time. We only collect data necessary for the service, and you control how your information is used.',
+    answer: 'Yes, BookAgreed is fully GDPR compliant. You can request a copy of your data or deletion of your account at any time. We only collect data necessary for the service, and you control how your information is used.',
   },
 ];
 
@@ -202,7 +202,7 @@ export function HelpCenter() {
             Help Center
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Find answers to common questions about BookGrid
+            Find answers to common questions about BookAgreed
           </p>
           
           {/* Search Bar */}
@@ -323,10 +323,10 @@ export function HelpCenter() {
                 📧 Contact Support
               </Link>
               <a
-                href="mailto:support@bookgrid.com"
+                href="mailto:support@bookagreed.com"
                 className="inline-block bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-lg font-semibold transition-colors border border-white/20"
               >
-                support@bookgrid.com
+                support@bookagreed.com
               </a>
             </div>
           </div>
@@ -370,7 +370,7 @@ export function HelpCenter() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center">
-            <p>&copy; 2025 BookGrid. All rights reserved.</p>
+            <p>&copy; 2025 BookAgreed. All rights reserved.</p>
           </div>
         </div>
       </footer>
