@@ -90,9 +90,6 @@ export function Landing() {
     },
   ];
 
-  // Contact info (dynamic)
-  const contactEmail = 'Book@bookagreed.com';
-  const contactPhone = '075 3931 9277';
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Calculate header offset for hero section
