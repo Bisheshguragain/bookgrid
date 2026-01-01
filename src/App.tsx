@@ -37,6 +37,7 @@ import { Contact } from './pages/Contact';
 import { HelpCenter } from './pages/HelpCenter';
 import { About } from './pages/About';
 import { Blog } from './pages/Blog';
+import BlogArticle from './pages/BlogArticle';
 import { Contacts } from './pages/Contacts';
 
 // Protected Route component
@@ -127,6 +128,7 @@ function App() {
         {/* Company pages */}
         <Route path="/about" element={<About />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<BlogArticle />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<HelpCenter />} />
 

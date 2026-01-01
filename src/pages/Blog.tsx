@@ -10,7 +10,7 @@ interface BlogPost {
   image: string;
 }
 
-const blogPosts: BlogPost[] = [
+export const blogPosts: BlogPost[] = [
   {
     id: '1',
     title: 'How to Reduce No-Shows by 50% with Smart Reminders',
@@ -67,7 +67,7 @@ const blogPosts: BlogPost[] = [
   },
 ];
 
-const categories = ['All', 'Getting Started', 'Tips & Tricks', 'Productivity', 'Business'];
+export const categories = ['All', 'Getting Started', 'Tips & Tricks', 'Productivity', 'Business'];
 
 export function Blog() {
   return (
@@ -96,7 +96,7 @@ export function Blog() {
       <section className="pt-32 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            BookGrid Blog
+            BookAgreed Blogs
           </h1>
           <p className="text-xl text-gray-600">
             Tips, guides, and insights to help you schedule smarter
@@ -158,9 +158,10 @@ export function Blog() {
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Latest Articles</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogPosts.map(post => (
-              <article 
-                key={post.id} 
-                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all group cursor-pointer"
+              <Link
+                key={post.id}
+                to={`/blog/${post.id}`}
+                className="block bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-all group cursor-pointer"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -180,7 +181,7 @@ export function Blog() {
                     <span>{post.readTime}</span>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </div>

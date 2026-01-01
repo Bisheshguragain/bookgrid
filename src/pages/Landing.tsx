@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircleIcon, CalendarIcon, ClockIcon, UserGroupIcon, VideoCameraIcon, BellIcon } from '@heroicons/react/24/outline';
 
@@ -89,19 +90,40 @@ export function Landing() {
     },
   ];
 
+  // Contact info (dynamic)
+  const contactEmail = 'Book@bookagreed.com';
+  const contactPhone = '075 3931 9277';
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Calculate header offset for hero section
+  // 40px (contact) + 80px (header) mobile, 44px + 88px desktop
+  const heroOffset = typeof window !== 'undefined' && window.innerWidth >= 768 ? 132 : 120;
+
   return (
     <div className="w-full">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center">
+      {/* Top Contact Header - white background, purple bold text, larger and fixed */}
+      <div className="w-full fixed top-0 left-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto flex flex-row items-center justify-end px-4 py-2 md:py-2 text-purple-700 font-bold text-sm md:text-base whitespace-nowrap flex-nowrap overflow-x-auto gap-4">
+          <span className="inline-block whitespace-nowrap">book@bookagreed.com</span>
+          <span className="inline-block">|</span>
+          <span className="inline-block whitespace-nowrap">075 3931 9277</span>
+        </div>
+      </div>
+
+      {/* Navigation with logo image restored, offset for fixed header */}
+      <div className="w-full fixed top-[40px] md:top-[44px] left-0 z-40 bg-white">
+        <div className="max-w-7xl mx-auto flex flex-row items-center justify-between px-4 py-3 md:py-4">
+          <Link to="/" className="flex items-center select-none">
             <img 
               src="/BookAgreed%20logo.jpg" 
               alt="BookAgreed" 
-              className="h-20"
+              className="h-20 max-h-16 w-auto object-contain select-none pointer-events-none"
+              draggable="false"
+              style={{userSelect: 'none'}}
             />
           </Link>
-          <div className="flex items-center space-x-4">
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center space-x-4">
             <Link to="/login" className="text-gray-700 hover:text-gray-900 font-medium">
               Sign In
             </Link>
@@ -109,35 +131,51 @@ export function Landing() {
               Get Started
             </Link>
           </div>
+          {/* Mobile menu button */}
+          <button className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-600" onClick={() => setMenuOpen(!menuOpen)} aria-label="Open menu">
+            <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
         </div>
-      </nav>
+      </div>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-            Scheduling Made
-            <span className="block text-primary-600">Effortlessly Simple</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Stop playing email tag. Let your clients book time with you directly. Modern scheduling that respects everyone's time.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/signup" className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg hover:shadow-xl">
-              Start Free Today
-            </Link>
-            <Link to="#pricing" onClick={(e) => {
-              e.preventDefault();
-              document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-            }} className="border-2 border-gray-300 hover:border-primary-600 text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors">
-              View Pricing
-            </Link>
-          </div>
-          <p className="text-gray-600 mt-6">
-            <span className="font-semibold">Free forever plan available</span> • No credit card required • 5-minute setup
-          </p>
+      <div
+        className="w-full flex flex-col items-center justify-center text-center px-4"
+        style={{
+          marginTop: heroOffset,
+        }}
+      >
+        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+          Scheduling Made
+          <span className="block text-primary-600">Effortlessly Simple</span>
+        </h1>
+        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          Stop playing email tag. Let your clients book time with you directly. Modern scheduling that respects everyone's time.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/signup" className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg hover:shadow-xl">
+            Start Free Today
+          </Link>
+          <Link to="#pricing" onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+          }} className="border-2 border-gray-300 hover:border-primary-600 text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors">
+            View Pricing
+          </Link>
         </div>
-      </section>
+        <p className="text-gray-600 mt-6">
+          <span className="font-semibold">Free forever plan available</span> • No credit card required • 5-minute setup
+        </p>
+      </div>
+      <style>
+      {`
+      @media (min-width: 768px) {
+        .hero-offset {
+          margin-top: 120px !important; /* 44px contact + 76px header */
+        }
+      }
+      `}
+      </style>
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -153,36 +191,39 @@ export function Landing() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
-              const colorSchemes = [
-                { bg: 'bg-blue-100', text: 'text-blue-600', border: 'hover:border-blue-300' },
-                { bg: 'bg-purple-100', text: 'text-purple-600', border: 'hover:border-purple-300' },
-                { bg: 'bg-green-100', text: 'text-green-600', border: 'hover:border-green-300' },
-                { bg: 'bg-orange-100', text: 'text-orange-600', border: 'hover:border-orange-300' },
-                { bg: 'bg-cyan-100', text: 'text-cyan-600', border: 'hover:border-cyan-300' },
-                { bg: 'bg-pink-100', text: 'text-pink-600', border: 'hover:border-pink-300' },
-              ];
-              const colors = colorSchemes[index % colorSchemes.length];
               return (
                 <div 
-                  key={index} 
-                  className={`group relative bg-white p-8 rounded-2xl border-2 border-gray-100 ${colors.border} hover:shadow-xl transition-all duration-300`}
+                  key={index}
+                  tabIndex={0}
+                  className="group relative bg-gradient-to-br from-purple-100 to-purple-200 p-8 rounded-2xl border-2 border-purple-200 hover:border-primary-600 focus:border-primary-700 hover:shadow-2xl focus:shadow-2xl transition-all duration-300 outline-none cursor-pointer feature-box"
                 >
                   {/* Icon container */}
-                  <div className={`w-16 h-16 rounded-xl ${colors.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={`h-8 w-8 ${colors.text}`} />
+                  <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center mb-6 group-hover:scale-110 group-focus:scale-110 transition-transform duration-300 border-2 border-purple-200 group-hover:border-primary-600 group-focus:border-primary-700">
+                    <Icon className="h-8 w-8 text-primary-600" />
                   </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-                  
-                  {/* Decorative corner accent */}
-                  <div className={`absolute top-0 right-0 w-20 h-20 ${colors.bg} opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-bl-3xl -z-10`}></div>
+                  <h3 className="text-xl font-bold text-primary-700 mb-3 group-hover:text-primary-800 group-focus:text-primary-900 transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed group-hover:text-gray-900 group-focus:text-gray-900 font-medium">
+                    {feature.description}
+                  </p>
+                  {/* Decorative accent */}
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-primary-100 opacity-0 group-hover:opacity-30 group-focus:opacity-40 transition-opacity duration-300 rounded-bl-3xl -z-10"></div>
                 </div>
               );
             })}
           </div>
         </div>
       </section>
+      <style>
+      {`
+      .feature-box:focus, .feature-box:hover {
+        box-shadow: 0 8px 32px 0 rgba(128, 90, 213, 0.25), 0 1.5px 6px 0 rgba(128, 90, 213, 0.10);
+        border-width: 2px;
+        border-color: #7c3aed;
+      }
+      `}
+      </style>
 
       {/* How It Works Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
@@ -469,7 +510,7 @@ export function Landing() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
               <h4 className="text-white font-bold mb-4">Product</h4>
               <ul className="space-y-2">

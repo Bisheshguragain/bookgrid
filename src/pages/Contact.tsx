@@ -194,7 +194,7 @@ export function Contact() {
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900">Email</h3>
-                      <p className="text-gray-600">support@bookgrid.com</p>
+                      <p className="text-gray-600">book@bookagreed.com</p>
                       <p className="text-sm text-gray-500 mt-1">We respond within 24-48 hours</p>
                     </div>
                   </div>
