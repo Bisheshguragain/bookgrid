@@ -104,9 +104,9 @@ export function Landing() {
       {/* Top Contact Header - white background, purple bold text, larger and fixed */}
       <div className="w-full fixed top-0 left-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto flex flex-row items-center justify-end px-4 py-2 md:py-2 text-purple-700 font-bold text-sm md:text-base whitespace-nowrap flex-nowrap overflow-x-auto gap-4">
-          <span className="inline-block whitespace-nowrap">book@bookagreed.com</span>
+          <a href="mailto:book@bookagreed.com" className="inline-block whitespace-nowrap no-underline hover:underline">book@bookagreed.com</a>
           <span className="inline-block">|</span>
-          <span className="inline-block whitespace-nowrap">075 3931 9277</span>
+          <a href="tel:+447539319277" className="inline-block whitespace-nowrap no-underline hover:underline">075 3931 9277</a>
         </div>
       </div>
 
