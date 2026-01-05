@@ -26,7 +26,14 @@ import type {
   AccountDeletionNotice,
 } from '../lib/database.types';
 
-type TabType = 'overview' | 'users' | 'payments' | 'inactive' | 'deletions';
+// New imports for contact submissions
+import {
+  getContactSubmissions,
+  updateContactSubmissionStatus,
+} from '../services/contactSubmissionsService';
+import type { ContactSubmission } from '../services/contactSubmissionsService';
+
+type TabType = 'overview' | 'users' | 'payments' | 'inactive' | 'deletions' | 'contacts';
 
 export function SuperAdminDashboard() {
   const { user } = useAuthStore();
@@ -56,7 +63,11 @@ export function SuperAdminDashboard() {
   
   // Deletion Notices State
   const [deletionNotices, setDeletionNotices] = useState<AccountDeletionNotice[]>([]);
-  
+
+  // Contacts State
+  const [contacts, setContacts] = useState<ContactSubmission[]>([]);
+  const [contactsPage, setContactsPage] = useState(1);
+
   const [processingAction, setProcessingAction] = useState(false);
 
   // Check authorization
@@ -112,6 +123,9 @@ export function SuperAdminDashboard() {
         } else if (activeTab === 'deletions') {
           const noticesData = await getDeletionNotices('sent');
           setDeletionNotices(noticesData);
+        } else if (activeTab === 'contacts') {
+          const submissions = await getContactSubmissions(50, contactsPage);
+          setContacts(submissions);
         }
       } catch (error) {
         console.error('Error loading superadmin data:', error);
@@ -120,7 +134,7 @@ export function SuperAdminDashboard() {
     };
 
     loadData();
-  }, [authorized, activeTab, usersPage, paymentsPage]);
+  }, [authorized, activeTab, usersPage, paymentsPage, contactsPage]);
 
   const handleUpdatePlan = async (userId: string, plan: 'free' | 'pro' | 'business') => {
     if (!window.confirm(`Are you sure you want to change this user's plan to ${plan.toUpperCase()}?`)) {
@@ -226,6 +240,23 @@ export function SuperAdminDashboard() {
     }
   };
 
+  // Contacts actions
+  const handleMarkContactStatus = async (id: string, status: 'read' | 'archived') => {
+    if (!window.confirm(`Mark this submission as ${status}?`)) return;
+    setProcessingAction(true);
+    try {
+      await updateContactSubmissionStatus(id, status);
+      const updated = await getContactSubmissions(50, contactsPage);
+      setContacts(updated);
+      alert('Status updated');
+    } catch (err) {
+      console.error('Failed updating contact status', err);
+      alert('Failed to update status');
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -257,6 +288,7 @@ export function SuperAdminDashboard() {
             { id: 'payments', label: '💰 Payments', icon: '💰' },
             { id: 'inactive', label: '⚠️ Inactive', icon: '⚠️' },
             { id: 'deletions', label: '🗑️ Deletions', icon: '🗑️' },
+            { id: 'contacts', label: '📥 Contacts', icon: '📥' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -458,6 +490,38 @@ export function SuperAdminDashboard() {
               onCancel={handleCancelDeletion}
               processing={processingAction}
             />
+          )}
+
+          {/* Contacts Tab */}
+          {activeTab === 'contacts' && (
+            <div>
+              <h2 className="text-xl font-bold mb-4">Contact Form Submissions</h2>
+              {contacts.length === 0 ? (
+                <p className="text-gray-600">No submissions found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {contacts.map((c) => (
+                    <div key={c.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="text-sm text-gray-500">{new Date(c.created_at).toLocaleString()}</div>
+                          <div className="text-lg font-semibold text-gray-900">{c.name} <span className="text-sm text-gray-500">• {c.email}</span></div>
+                          <div className="text-sm text-purple-600 font-medium">{c.subject}</div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={`px-3 py-1 rounded-full text-sm ${c.status === 'new' ? 'bg-yellow-100 text-yellow-800' : c.status === 'read' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'}`}>{c.status.toUpperCase()}</span>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleMarkContactStatus(c.id, 'read')} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Mark Read</button>
+                            <button onClick={() => handleMarkContactStatus(c.id, 'archived')} className="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 text-sm">Archive</button>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-gray-700 whitespace-pre-line">{c.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

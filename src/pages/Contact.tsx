@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { sendContactFormToSuperadmin } from '../services/emailService';
+import { createContactSubmission } from '../services/contactSubmissionsService';
 import { SEO, SEO_CONFIGS } from '../components/SEO';
 
 export function Contact() {
@@ -13,19 +14,6 @@ export function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await sendContactFormToSuperadmin(formData);
-    } catch (err) {
-      // Optionally handle error (show error message)
-    }
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    setFormData({ name: '', email: '', subject: '', message: '' });
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -130,7 +118,25 @@ export function Contact() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setIsSubmitting(true);
+                  try {
+                    // send email notification to superadmin
+                    await sendContactFormToSuperadmin(formData);
+
+                    // create a record in contact_submissions table (for superadmin dashboard)
+                    await createContactSubmission(formData);
+
+                    setIsSubmitted(true);
+                    setFormData({ name: '', email: '', subject: '', message: '' });
+                  } catch (err) {
+                    console.error('Error sending contact form:', err);
+                    alert('Failed to send message. Please try again later.');
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }} className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-bold text-gray-900 mb-2">
@@ -207,17 +213,7 @@ export function Contact() {
                     disabled={isSubmitting}
                     className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg rounded-xl hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
                   >
-                    {isSubmitting ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Sending...
-                      </span>
-                    ) : (
-                      '📧 Send Message'
-                    )}
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
                   </button>
                 </form>
               )}
