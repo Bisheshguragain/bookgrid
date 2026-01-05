@@ -103,12 +103,10 @@ export function Landing() {
       
       {/* Top Contact Header - white background, purple bold text, larger and fixed */}
       <div className="w-full fixed top-0 left-0 z-50 bg-white border-b border-gray-200">
-        <div className="w-full max-w-7xl mx-auto flex flex-row items-center justify-center md:justify-end px-4 py-2 md:py-2 text-purple-700 font-bold text-sm md:text-base">
-          <div className="flex items-center gap-4 whitespace-nowrap">
-            <a href="mailto:book@bookagreed.com" className="inline-block whitespace-nowrap no-underline hover:underline">book@bookagreed.com</a>
-            <span className="inline-block">|</span>
-            <a href="tel:+447539319277" className="inline-block whitespace-nowrap no-underline hover:underline">075 3931 9277</a>
-          </div>
+        <div className="max-w-7xl mx-auto flex flex-row items-center justify-center md:justify-end px-4 py-2 md:py-2 text-purple-700 font-bold text-sm md:text-base whitespace-nowrap flex-nowrap overflow-x-auto gap-4">
+          <a href="mailto:book@bookagreed.com" className="inline-block whitespace-nowrap no-underline hover:underline">book@bookagreed.com</a>
+          <span className="inline-block">|</span>
+          <a href="tel:+447539319277" className="inline-block whitespace-nowrap no-underline hover:underline">075 3931 9277</a>
         </div>
       </div>
 
@@ -305,34 +303,62 @@ export function Landing() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-purple-50 via-blue-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-semibold text-sm mb-4">
+              ⭐ Testimonials
+            </div>
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
               Loved by Users Worldwide
             </h2>
-            <p className="text-xl text-gray-600">
-              See what people are saying about our scheduling solution
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Join thousands of professionals who have transformed their scheduling with BookAgreed
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all">
-                <div className="flex items-center mb-4">
-                  <span className="text-4xl mr-3">{testimonial.image}</span>
+              <div 
+                key={index} 
+                className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-2 border border-gray-100 text-center md:text-left"
+              >
+                <div className="flex items-center justify-center md:justify-start mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full flex items-center justify-center text-3xl mr-4">
+                    {testimonial.image}
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                    <h4 className="font-bold text-gray-900 text-lg">{testimonial.name}</h4>
+                    <p className="text-sm text-purple-600 font-medium">{testimonial.role}</p>
                   </div>
                 </div>
-                <p className="text-gray-700 italic">"{testimonial.quote}"</p>
-                <div className="flex mt-4 text-yellow-400">
+                <div className="flex justify-center md:justify-start mb-4 text-yellow-400 text-xl">
                   {[...Array(5)].map((_, i) => (
                     <span key={i}>⭐</span>
                   ))}
                 </div>
+                <p className="text-gray-700 leading-relaxed text-center md:text-left">"{testimonial.quote}"</p>
               </div>
             ))}
+          </div>
+          
+          {/* Trust Indicators */}
+          <div className="mt-16 text-center">
+            <div className="inline-flex flex-wrap items-center justify-center gap-8 px-8 py-6 bg-white rounded-2xl shadow-md">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600">10K+</div>
+                <div className="text-sm text-gray-600">Happy Users</div>
+              </div>
+              <div className="hidden sm:block w-px h-12 bg-gray-200"></div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600">50K+</div>
+                <div className="text-sm text-gray-600">Meetings Scheduled</div>
+              </div>
+              <div className="hidden sm:block w-px h-12 bg-gray-200"></div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-600">4.9/5</div>
+                <div className="text-sm text-gray-600">Average Rating</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -601,7 +627,7 @@ export function Landing() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
             <div>
               <h4 className="text-white font-bold mb-4">Product</h4>
               <ul className="space-y-2">
