@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" style="background: #f8fafc; color: #222;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Confirm your email</title>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        body, html { background: #18181b !important; color: #fff !important; }
+        .container { background: #23272f !important; }
+        .button { background: #7c3aed !important; color: #fff !important; }
+      }
+      .button:hover { background: #6d28d9 !important; }
+    </style>
+  </head>
+  <body style="margin:0; padding:0; background: #f8fafc; color: #222;">
+    <div class="container" style="max-width: 480px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 32px 24px; font-family: Arial, sans-serif;">
+      <div style="text-align: center;">
+        <img src="https://bookagreed.vercel.app/logo192.png" alt="BookAgreed" width="80" style="margin-bottom: 24px;" />
+      </div>
+      <h2 style="margin-top: 0; color: #7c3aed;">Confirm your email address</h2>
+      <p>
+        Hi
+        {{ if .UserMetadata.full_name }}
+          {{ .UserMetadata.full_name }},
+        {{ else if .UserMetadata.name }}
+          {{ .UserMetadata.name }},
+        {{ else }}
+          there,
+        {{ end }}
+      </p>
+      <p>Thank you for signing up for <strong>BookAgreed</strong>! Please confirm your email address to activate your account and start scheduling meetings effortlessly.</p>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="{{ .ConfirmationURL }}" class="button" style="display: inline-block; background: #7c3aed; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+          Confirm Email Address
+        </a>
+      </div>
+      <p style="font-size: 14px; color: #555;">
+        If the button above does not work, copy and paste this link into your browser:<br />
+        <a href="{{ .ConfirmationURL }}" style="color: #7c3aed; word-break: break-all;">{{ .ConfirmationURL }}</a>
+      </p>
+      <p style="font-size: 13px; color: #666; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee;">
+        <strong>This link will expire in 24 hours.</strong><br />
+        If you did not create an account with BookAgreed, you can safely ignore this email.
+      </p>
+      <p style="font-size: 13px; color: #888; margin-top: 16px; text-align: center;">
+        &copy; 2026 BookAgreed · <a href="https://bookagreed.vercel.app" style="color: #7c3aed; text-decoration: none;">bookagreed.vercel.app</a>
+      </p>
+    </div>
+  </body>
+</html>

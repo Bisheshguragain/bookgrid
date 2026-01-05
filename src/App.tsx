@@ -11,6 +11,7 @@ import { Layout } from './components/layout/Layout';
 import { LoginForm } from './components/auth/LoginForm';
 import { SignUpForm } from './components/auth/SignUpForm';
 import { ForgotPasswordForm } from './components/auth/ForgotPasswordForm';
+import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
 
 // Pages
 import { Dashboard } from './pages/Dashboard';
@@ -148,6 +149,7 @@ function App() {
             <ForgotPasswordForm />
           </PublicRoute>
         } />
+        <Route path="/reset-password" element={<ResetPasswordForm />} />
 
         {/* Protected routes */}
         <Route path="/app" element={
