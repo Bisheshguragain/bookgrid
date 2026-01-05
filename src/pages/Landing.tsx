@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircleIcon, CalendarIcon, ClockIcon, UserGroupIcon, VideoCameraIcon, BellIcon } from '@heroicons/react/24/outline';
+import { SEO, SEO_CONFIGS } from '../components/SEO';
 
 export function Landing() {
   const features = [
@@ -98,6 +99,8 @@ export function Landing() {
 
   return (
     <div className="w-full">
+      <SEO {...SEO_CONFIGS.home} />
+      
       {/* Top Contact Header - white background, purple bold text, larger and fixed */}
       <div className="w-full fixed top-0 left-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto flex flex-row items-center justify-end px-4 py-2 md:py-2 text-purple-700 font-bold text-sm md:text-base whitespace-nowrap flex-nowrap overflow-x-auto gap-4">

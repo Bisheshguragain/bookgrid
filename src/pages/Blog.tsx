@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SEO, SEO_CONFIGS } from '../components/SEO';
 
 interface BlogPost {
   id: string;
@@ -72,6 +73,8 @@ export const categories = ['All', 'Getting Started', 'Tips & Tricks', 'Productiv
 export function Blog() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <SEO {...SEO_CONFIGS.blog} />
+      
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">

@@ -1,18 +1,32 @@
-# BookAgreed - robots.txt
+# BookAgreed - Smart Scheduling Platform
 # https://www.robotstxt.org/
 
 User-agent: *
 Allow: /
-Allow: /login
-Allow: /signup
+
+# High-priority pages for SEO
+Allow: /blog
+Allow: /blog/*
+Allow: /about
+Allow: /pricing
+Allow: /features
+Allow: /help-center
+Allow: /contact
 Allow: /privacy
 Allow: /terms
 Allow: /cookies
 
-# Disallow crawling of protected/dynamic routes
-Disallow: /app/
-Disallow: /u/
-Disallow: /book/
+# Allow public booking pages (important for SEO)
+Allow: /book/*
+
+# Disallow protected/dynamic user routes
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /bookings
+Disallow: /availability
+Disallow: /event-types
+Disallow: /integrations
+Disallow: /admin
 Disallow: /reschedule/
 Disallow: /cancel/
 Disallow: /database-test
@@ -21,9 +35,11 @@ Disallow: /database-test
 Disallow: /.env
 Disallow: /*.json$
 Disallow: /src/
+Disallow: /api/
 
 # Crawl-delay to prevent excessive requests
 Crawl-delay: 1
 
-# Sitemap (add when you have one)
-Sitemap: https://bookagreed.com/sitemap.xml
+# Sitemap locations
+Sitemap: https://bookagreed.vercel.app/sitemap.xml
+Sitemap: https://bookagreed.vercel.app/blog-sitemap.xml
