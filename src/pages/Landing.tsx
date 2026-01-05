@@ -251,30 +251,53 @@ export function Landing() {
       </style>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-purple-50 via-white to-blue-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
               How It Works
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Get up and running in minutes with our simple 6-step process
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          
+          {/* Mobile & Desktop Centered Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {steps.map((step, index) => (
-              <div key={index} className="relative">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary-600 text-white font-bold text-lg">
+              <div 
+                key={index} 
+                className="relative bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-primary-200 group mx-auto w-full max-w-sm"
+              >
+                {/* Animated number badge */}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
                     {step.number}
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
-                    <p className="mt-2 text-gray-600">{step.description}</p>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                      {step.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {step.description}
+                    </p>
                   </div>
                 </div>
+                
+                {/* Decorative corner accent */}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary-100 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
               </div>
             ))}
+          </div>
+          
+          {/* CTA Button */}
+          <div className="text-center mt-12">
+            <Link to="/signup" className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              Get Started Free
+              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
@@ -313,49 +336,100 @@ export function Landing() {
       </section>
 
       {/* Why Upgrade Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
               Why Upgrade?
             </h2>
-            <p className="text-xl text-gray-600">
-              Scale your scheduling as your business grows
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Scale your scheduling as your business grows with powerful features
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl border border-gray-200">
-              <div className="text-4xl mb-4">🚀</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Start Free, Grow Seamlessly</h3>
+          
+          {/* Centered Grid for Mobile & Desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Card 1 */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200 group mx-auto w-full transform hover:-translate-y-1">
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">🚀</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+                Start Free, Grow Seamlessly
+              </h3>
               <p className="text-gray-600 leading-relaxed">
                 Begin with our free plan and upgrade when you're ready. No pressure, no lock-in. 
                 Perfect for solopreneurs testing the waters or small teams just getting started.
               </p>
+              <div className="mt-6 flex items-center text-sm text-blue-600 font-semibold">
+                <span>Learn more</span>
+                <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-50 to-white p-8 rounded-xl border border-gray-200">
-              <div className="text-4xl mb-4">💼</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Pro Features for Professionals</h3>
+            
+            {/* Card 2 */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-purple-200 group mx-auto w-full transform hover:-translate-y-1">
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">💼</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-purple-600 transition-colors">
+                Pro Features for Professionals
+              </h3>
               <p className="text-gray-600 leading-relaxed">
                 Unlock advanced analytics, integrations, and custom branding. 
                 Handle more bookings, create more event types, and delight your clients with a premium experience.
               </p>
+              <div className="mt-6 flex items-center text-sm text-purple-600 font-semibold">
+                <span>See Pro features</span>
+                <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-white p-8 rounded-xl border border-gray-200">
-              <div className="text-4xl mb-4">📊</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Business-Grade Reliability</h3>
+            
+            {/* Card 3 */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-green-200 group mx-auto w-full transform hover:-translate-y-1">
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">📊</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-green-600 transition-colors">
+                Business-Grade Reliability
+              </h3>
               <p className="text-gray-600 leading-relaxed">
                 Our Business plan offers unlimited everything: event types, bookings, and priority support. 
                 Built for growing teams that need enterprise-level features without enterprise complexity.
               </p>
+              <div className="mt-6 flex items-center text-sm text-green-600 font-semibold">
+                <span>Explore Business plan</span>
+                <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-white p-8 rounded-xl border border-gray-200">
-              <div className="text-4xl mb-4">🎯</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Transparent Pricing, No Surprises</h3>
+            
+            {/* Card 4 */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-orange-200 group mx-auto w-full transform hover:-translate-y-1">
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">🎯</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-orange-600 transition-colors">
+                Transparent Pricing, No Surprises
+              </h3>
               <p className="text-gray-600 leading-relaxed">
                 What you see is what you get. No hidden fees, no surprise charges. 
                 Cancel anytime, downgrade if needed. We're here to support your success, not lock you in.
               </p>
+              <div className="mt-6 flex items-center text-sm text-orange-600 font-semibold">
+                <span>View pricing</span>
+                <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
+          </div>
+          
+          {/* CTA Button */}
+          <div className="text-center mt-12">
+            <Link to="/app/pricing" className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              Compare All Plans
+              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
