@@ -421,16 +421,6 @@ export function Landing() {
               </div>
             </div>
           </div>
-          
-          {/* CTA Button */}
-          <div className="text-center mt-12">
-            <Link to="/app/pricing" className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-              Compare All Plans
-              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
         </div>
       </section>
 
