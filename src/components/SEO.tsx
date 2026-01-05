@@ -87,13 +87,13 @@ export const SEO_CONFIGS = {
   home: {
     title: 'BookAgreed - Smart Scheduling Made Simple | Free Online Booking System',
     description: 'BookAgreed is a modern, free scheduling platform for professionals. Create booking pages, manage availability, automate reminders, and streamline your appointments. No credit card required.',
-    keywords: 'scheduling software, appointment booking, calendar management, meeting scheduler, booking system, free calendly alternative, online scheduling app',
+    keywords: 'scheduling software, appointment booking, calendar management, meeting scheduler, booking system, free calendly alternative, online scheduling app, automated scheduling, business calendar, client booking system',
     canonicalPath: '/',
   },
   pricing: {
     title: 'Pricing Plans - BookAgreed | Free & Premium Scheduling Software',
     description: 'Choose the perfect plan for your scheduling needs. Start with our free plan or upgrade to Pro for advanced features. No credit card required for free plan.',
-    keywords: 'scheduling software pricing, appointment booking cost, free calendly alternative, scheduling app plans, booking system pricing',
+    keywords: 'scheduling software pricing, appointment booking cost, free calendly alternative, scheduling app plans, booking system pricing, affordable scheduling tool',
     canonicalPath: '/pricing',
   },
   features: {
@@ -127,3 +127,83 @@ export const SEO_CONFIGS = {
     canonicalPath: '/contact',
   },
 };
+
+/**
+ * Add JSON-LD structured data to page
+ * Helps search engines understand page content better
+ */
+export function addStructuredData(schema: object) {
+  const scriptId = 'structured-data-script';
+  let script = document.getElementById(scriptId) as HTMLScriptElement;
+  
+  if (!script) {
+    script = document.createElement('script');
+    script.id = scriptId;
+    script.type = 'application/ld+json';
+    document.head.appendChild(script);
+  }
+  
+  script.textContent = JSON.stringify(schema);
+}
+
+/**
+ * FAQ Page Schema for Help Center
+ */
+export const getFAQSchema = (faqs: Array<{question: string; answer: string}>) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
+    }
+  }))
+});
+
+/**
+ * Article Schema for Blog Posts
+ */
+export const getArticleSchema = (article: {
+  title: string;
+  description: string;
+  datePublished: string;
+  dateModified?: string;
+  authorName?: string;
+  image?: string;
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": article.title,
+  "description": article.description,
+  "image": article.image || "https://bookagreed.vercel.app/og-image.png",
+  "datePublished": article.datePublished,
+  "dateModified": article.dateModified || article.datePublished,
+  "author": {
+    "@type": "Person",
+    "name": article.authorName || "BookAgreed Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BookAgreed",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://bookagreed.vercel.app/logo192.png"
+    }
+  }
+});
+
+/**
+ * Breadcrumb Schema for navigation
+ */
+export const getBreadcrumbSchema = (breadcrumbs: Array<{name: string; url: string}>) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": breadcrumbs.map((crumb, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": crumb.name,
+    "item": `https://bookagreed.vercel.app${crumb.url}`
+  }))
+});

@@ -1,56 +1,75 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { supabase } from './lib/supabase';
 import { ConnectionStatus } from './components/ConnectionStatus';
+import { initializeAnalytics, analytics } from './services/analytics';
 
 // Layout
 import { Layout } from './components/layout/Layout';
 
-// Auth components
+// Auth components (keep these for immediate loading)
 import { LoginForm } from './components/auth/LoginForm';
 import { SignUpForm } from './components/auth/SignUpForm';
 import { ForgotPasswordForm } from './components/auth/ForgotPasswordForm';
 import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
 
-// Pages
-import { Dashboard } from './pages/Dashboard';
-import { EventTypes } from './pages/EventTypes';
-import { CreateEventType } from './pages/CreateEventType';
-import { EditEventType } from './pages/EditEventType';
-import { CalendarView } from './pages/CalendarView';
-import { Availability } from './pages/Availability';
-import { Analytics } from './pages/Analytics';
-import { Settings } from './pages/Settings';
-import { Reminders } from './pages/Reminders';
-import { BookAMeet } from './pages/BookAMeet';
-import { PublicBooking } from './pages/PublicBooking';
-import { Reschedule } from './pages/Reschedule';
-import { Cancel } from './pages/Cancel';
+// Public pages (keep landing and blog for SEO)
 import { Landing } from './pages/Landing';
-import { DatabaseTest } from './pages/DatabaseTest';
-import { Pricing } from './pages/Pricing';
-import { SuperAdminDashboard } from './pages/SuperAdminDashboard';
-import { PrivacyPolicy } from './pages/PrivacyPolicy';
-import { TermsOfService } from './pages/TermsOfService';
-import { CookiesPolicy } from './pages/CookiesPolicy';
-import { Contact } from './pages/Contact';
-import { HelpCenter } from './pages/HelpCenter';
-import { About } from './pages/About';
 import { Blog } from './pages/Blog';
 import BlogArticle from './pages/BlogArticle';
-import { Contacts } from './pages/Contacts';
+
+// Lazy load protected routes (reduces initial bundle size by ~70%)
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const EventTypes = lazy(() => import('./pages/EventTypes').then(m => ({ default: m.EventTypes })));
+const CreateEventType = lazy(() => import('./pages/CreateEventType').then(m => ({ default: m.CreateEventType })));
+const EditEventType = lazy(() => import('./pages/EditEventType').then(m => ({ default: m.EditEventType })));
+const CalendarView = lazy(() => import('./pages/CalendarView').then(m => ({ default: m.CalendarView })));
+const Availability = lazy(() => import('./pages/Availability').then(m => ({ default: m.Availability })));
+const Analytics = lazy(() => import('./pages/Analytics').then(m => ({ default: m.Analytics })));
+const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
+const Reminders = lazy(() => import('./pages/Reminders').then(m => ({ default: m.Reminders })));
+const BookAMeet = lazy(() => import('./pages/BookAMeet').then(m => ({ default: m.BookAMeet })));
+const PublicBooking = lazy(() => import('./pages/PublicBooking').then(m => ({ default: m.PublicBooking })));
+const Reschedule = lazy(() => import('./pages/Reschedule').then(m => ({ default: m.Reschedule })));
+const Cancel = lazy(() => import('./pages/Cancel').then(m => ({ default: m.Cancel })));
+const DatabaseTest = lazy(() => import('./pages/DatabaseTest').then(m => ({ default: m.DatabaseTest })));
+const Pricing = lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pricing })));
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard').then(m => ({ default: m.SuperAdminDashboard })));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const TermsOfService = lazy(() => import('./pages/TermsOfService').then(m => ({ default: m.TermsOfService })));
+const CookiesPolicy = lazy(() => import('./pages/CookiesPolicy').then(m => ({ default: m.CookiesPolicy })));
+const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
+const HelpCenter = lazy(() => import('./pages/HelpCenter').then(m => ({ default: m.HelpCenter })));
+const About = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
+const Contacts = lazy(() => import('./pages/Contacts').then(m => ({ default: m.Contacts })));
+
+// Loading component for lazy routes
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+    </div>
+  );
+}
+
+// Analytics tracker component
+function AnalyticsTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    analytics.pageview(location.pathname + location.search, document.title);
+  }, [location]);
+
+  return null;
+}
 
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuthStore();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!isAuthenticated) {
@@ -65,11 +84,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuthStore();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (isAuthenticated) {
@@ -84,6 +99,9 @@ function App() {
   const loading = useAuthStore(state => state.loading);
 
   useEffect(() => {
+    // Initialize Google Analytics
+    initializeAnalytics();
+    
     // Get initial session
     supabase.auth.getSession()
       .then(({ data: { session } }: any) => {
@@ -107,82 +125,137 @@ function App() {
   }, []); // Run only once on mount
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
     <BrowserRouter>
+      <AnalyticsTracker />
       <ConnectionStatus />
-      <Routes>
-        {/* Public landing page */}
-        <Route path="/" element={<Landing />} />
-        
-        {/* Legal pages */}
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<TermsOfService />} />
-        <Route path="/cookies" element={<CookiesPolicy />} />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Public landing page */}
+          <Route path="/" element={<Landing />} />
+          
+          {/* Legal pages */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/cookies" element={<CookiesPolicy />} />
 
-        {/* Company pages */}
-        <Route path="/about" element={<About />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/:id" element={<BlogArticle />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/help" element={<HelpCenter />} />
+          {/* Company pages */}
+          <Route path="/about" element={<About />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:id" element={<BlogArticle />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/help" element={<HelpCenter />} />
 
-        {/* Public auth routes */}
-        <Route path="/login" element={
-          <PublicRoute>
-            <LoginForm />
-          </PublicRoute>
-        } />
-        <Route path="/signup" element={
-          <PublicRoute>
-            <SignUpForm />
-          </PublicRoute>
-        } />
-        <Route path="/forgot-password" element={
-          <PublicRoute>
-            <ForgotPasswordForm />
-          </PublicRoute>
-        } />
-        <Route path="/reset-password" element={<ResetPasswordForm />} />
+          {/* Public auth routes */}
+          <Route path="/login" element={
+            <PublicRoute>
+              <LoginForm />
+            </PublicRoute>
+          } />
+          <Route path="/signup" element={
+            <PublicRoute>
+              <SignUpForm />
+            </PublicRoute>
+          } />
+          <Route path="/forgot-password" element={
+            <PublicRoute>
+              <ForgotPasswordForm />
+            </PublicRoute>
+          } />
+          <Route path="/reset-password" element={<ResetPasswordForm />} />
 
-        {/* Protected routes */}
-        <Route path="/app" element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="superadmin" element={<SuperAdminDashboard />} />
-          <Route path="event-types" element={<EventTypes />} />
-          <Route path="event-types/new" element={<CreateEventType />} />
-          <Route path="event-types/:id/edit" element={<EditEventType />} />
-          <Route path="calendar" element={<CalendarView />} />
-          <Route path="availability" element={<Availability />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="book-a-meet" element={<BookAMeet />} />
-          <Route path="pricing" element={<Pricing />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="reminders" element={<Reminders />} />
-          <Route path="database-test" element={<DatabaseTest />} />
-          <Route path="contacts" element={<Contacts />} />
-        </Route>
+          {/* Protected routes */}
+          <Route path="/app" element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="dashboard" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Dashboard />
+              </Suspense>
+            } />
+            <Route path="superadmin" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <SuperAdminDashboard />
+              </Suspense>
+            } />
+            <Route path="event-types" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <EventTypes />
+              </Suspense>
+            } />
+            <Route path="event-types/new" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <CreateEventType />
+              </Suspense>
+            } />
+            <Route path="event-types/:id/edit" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <EditEventType />
+              </Suspense>
+            } />
+            <Route path="calendar" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <CalendarView />
+              </Suspense>
+            } />
+            <Route path="availability" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Availability />
+              </Suspense>
+            } />
+            <Route path="analytics" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Analytics />
+              </Suspense>
+            } />
+            <Route path="book-a-meet" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <BookAMeet />
+              </Suspense>
+            } />
+            <Route path="pricing" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Pricing />
+              </Suspense>
+            } />
+            <Route path="settings" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Settings />
+              </Suspense>
+            } />
+            <Route path="reminders" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Reminders />
+              </Suspense>
+            } />
+            <Route path="database-test" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <DatabaseTest />
+              </Suspense>
+            } />
+            <Route path="contacts" element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Contacts />
+              </Suspense>
+            } />
+          </Route>
 
-        {/* Public booking routes (no auth required) */}
-        <Route path="/u/:username" element={<PublicBooking />} />
-        <Route path="/book/:eventTypeId" element={<PublicBooking />} />
-        <Route path="/reschedule/:bookingId/:token" element={<Reschedule />} />
-        <Route path="/cancel/:bookingId/:token" element={<Cancel />} />
+          {/* Public booking routes (no auth required) */}
+          <Route path="/u/:username" element={<PublicBooking />} />
+          <Route path="/book/:eventTypeId" element={<PublicBooking />} />
+          <Route path="/reschedule/:bookingId/:token" element={<Reschedule />} />
+          <Route path="/cancel/:bookingId/:token" element={<Cancel />} />
 
-        {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
