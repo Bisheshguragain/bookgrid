@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SEO, SEO_CONFIGS } from '../components/SEO';
 
 export function About() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const values = [
     {
       icon: '🎯',
@@ -35,7 +38,8 @@ export function About() {
           <Link to="/" className="flex items-center">
             <img src="/BookAgreed%20logo.jpg" alt="BookAgreed" className="h-14" />
           </Link>
-          <div className="flex items-center space-x-4">
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center space-x-4">
             <Link to="/help" className="text-gray-700 hover:text-gray-900 font-medium">
               Help Center
             </Link>
@@ -46,8 +50,37 @@ export function About() {
               Get Started
             </Link>
           </div>
+          {/* Mobile menu button */}
+          <button className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-600" onClick={() => setMenuOpen(!menuOpen)} aria-label="Open menu">
+            <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile menu overlay */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex md:hidden" onClick={() => setMenuOpen(false)}>
+          <nav
+            className="bg-white w-11/12 max-w-xs h-full shadow-xl p-6 flex flex-col gap-6 animate-slide-in-left relative justify-center items-center"
+            onClick={e => e.stopPropagation()}
+            aria-label="Mobile navigation menu"
+          >
+            <button
+              className="absolute top-4 right-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-600"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Close menu"
+            >
+              <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <Link to="/login" className="w-full text-center text-primary-700 hover:text-primary-900 font-bold text-2xl py-4 bg-primary-50 rounded-lg shadow mb-4 transition-colors" onClick={() => setMenuOpen(false)}>
+              Sign In
+            </Link>
+            <Link to="/signup" className="w-full text-center bg-primary-600 hover:bg-primary-700 text-white px-6 py-4 rounded-lg font-bold text-2xl shadow-lg transition-colors" onClick={() => setMenuOpen(false)}>
+              Get Started
+            </Link>
+          </nav>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
