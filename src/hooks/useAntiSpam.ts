@@ -31,9 +31,9 @@ async function getFingerprint(): Promise<string> {
         ctx.fillStyle = '#f60';
         ctx.fillRect(125, 1, 62, 20);
         ctx.fillStyle = '#069';
-        ctx.fillText('BookGrid', 2, 15);
+        ctx.fillText('BookAgreed', 2, 15);
         ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-        ctx.fillText('BookGrid', 4, 17);
+        ctx.fillText('BookAgreed', 4, 17);
         canvasHash = canvas.toDataURL();
       }
 

@@ -77,11 +77,11 @@ export function About() {
       <section className="pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-            About BookGrid
+            About BookAgreed
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed">
             We're on a mission to eliminate the back-and-forth of scheduling. 
-            Founded in 2024, BookGrid helps thousands of professionals save time 
+            Founded in 2024, BookAgreed helps thousands of professionals save time 
             and focus on what matters most.
           </p>
         </div>
@@ -95,12 +95,12 @@ export function About() {
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  BookGrid was born from a simple frustration: the endless email chains 
+                  BookAgreed was born from a simple frustration: the endless email chains 
                   just to schedule a single meeting. "When are you free?" "How about Tuesday?" 
                   "Actually, can we do Wednesday instead?"
                 </p>
                 <p>
-                  We knew there had to be a better way. So we built BookGrid—a scheduling 
+                  We knew there had to be a better way. So we built BookAgreed—a scheduling 
                   tool that's powerful enough for busy professionals yet simple enough that 
                   anyone can use it in minutes.
                 </p>
@@ -159,7 +159,7 @@ export function About() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Meet the Team</h2>
-            <p className="text-xl text-gray-600">The people behind BookGrid</p>
+            <p className="text-xl text-gray-600">The people behind BookAgreed</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {team.map((member, index) => (
@@ -237,7 +237,7 @@ export function About() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center">
-            <p>&copy; 2025 BookGrid. All rights reserved.</p>
+            <p>&copy; 2025 BookAgreed. All rights reserved.</p>
           </div>
         </div>
       </footer>
