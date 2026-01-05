@@ -9,10 +9,14 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'
   rootMargin?: string;
 }
 
+// BookAgreed branded placeholder with gradient and logo shape
+const BOOKAGREED_PLACEHOLDER = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%237c3aed;stop-opacity:0.1' /%3E%3Cstop offset='100%25' style='stop-color:%239333ea;stop-opacity:0.2' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial,sans-serif' font-size='20' fill='%237c3aed' text-anchor='middle' dominant-baseline='middle' opacity='0.4'%3EBookAgreed%3C/text%3E%3C/svg%3E`;
+
 /**
  * LazyImage Component
  * Lazy loads images when they enter viewport for better performance
  * Implements Intersection Observer API for optimal loading
+ * Uses BookAgreed branded placeholder by default
  * 
  * @example
  * <LazyImage 
@@ -24,7 +28,7 @@ interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'
 export function LazyImage({
   src,
   alt,
-  placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%23f0f0f0" width="400" height="300"/%3E%3C/svg%3E',
+  placeholder = BOOKAGREED_PLACEHOLDER,
   className = '',
   threshold = 0.01,
   rootMargin = '50px',
