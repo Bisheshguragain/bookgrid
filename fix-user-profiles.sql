@@ -14,7 +14,7 @@ BEGIN
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
     LOWER(SPLIT_PART(NEW.email, '@', 1)),
-    'America/New_York'
+    'Europe/London'
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
@@ -42,7 +42,7 @@ SELECT
   au.email,
   COALESCE(au.raw_user_meta_data->>'full_name', au.email),
   LOWER(SPLIT_PART(au.email, '@', 1)),
-  'America/New_York'
+  'Europe/London'
 FROM auth.users au
 LEFT JOIN public.users_profile up ON au.id = up.id
 WHERE up.id IS NULL

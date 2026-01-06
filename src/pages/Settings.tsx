@@ -17,7 +17,7 @@ export function Settings() {
   const [formData, setFormData] = useState<Partial<UserProfile>>({
     full_name: '',
     username: '',
-    time_zone: 'America/New_York',
+    time_zone: 'Europe/London',
     default_meeting_duration: 30,
     company_name: '', // Add company_name to form state
   });

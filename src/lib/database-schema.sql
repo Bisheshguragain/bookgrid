@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users_profile (
     email TEXT NOT NULL UNIQUE,
     full_name TEXT NOT NULL,
     username TEXT UNIQUE,
-    time_zone TEXT DEFAULT 'America/New_York',
+    time_zone TEXT DEFAULT 'Europe/London',
     avatar_url TEXT,
     default_meeting_duration INTEGER DEFAULT 30,
     company_name TEXT, -- Optional company name
