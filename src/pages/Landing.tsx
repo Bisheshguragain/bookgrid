@@ -538,15 +538,11 @@ export function Landing() {
                 </li>
                 <li className="flex items-start text-gray-700">
                   <CheckCircleIcon className="h-5 w-5 text-primary-600 mr-3 flex-shrink-0 mt-0.5" />
-                  <span>Priority email support</span>
+                  <span>Calendar integrations</span>
                 </li>
                 <li className="flex items-start text-gray-700">
                   <CheckCircleIcon className="h-5 w-5 text-primary-600 mr-3 flex-shrink-0 mt-0.5" />
-                  <span>Custom branding</span>
-                </li>
-                <li className="flex items-start text-gray-700">
-                  <CheckCircleIcon className="h-5 w-5 text-primary-600 mr-3 flex-shrink-0 mt-0.5" />
-                  <span>Advanced reminders</span>
+                  <span>API access</span>
                 </li>
               </ul>
               <Link to="/signup" className="block w-full py-3 rounded-lg font-semibold transition-colors bg-primary-600 hover:bg-primary-700 text-white text-center">

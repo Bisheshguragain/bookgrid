@@ -66,7 +66,7 @@ export function SuperAdminDashboard() {
 
   // Contacts State
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
-  const [contactsPage, setContactsPage] = useState(1);
+  const [contactsPage] = useState(1); // Currently fixed at page 1, pagination can be added later
 
   const [processingAction, setProcessingAction] = useState(false);
 

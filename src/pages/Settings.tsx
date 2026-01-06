@@ -698,8 +698,8 @@ export function Settings() {
                   <>
                     <li>• Advanced availability settings</li>
                     <li>• Analytics dashboard</li>
-                    <li>• Custom branding</li>
-                    <li>• Priority support</li>
+                    <li>• Calendar integrations</li>
+                    <li>• API access</li>
                     <li>• Most event types (keep only 1)</li>
                   </>
                 )}

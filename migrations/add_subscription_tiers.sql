@@ -36,7 +36,7 @@ VALUES
   ('free', 'Free', 0, 0, 1, 100, 
    '{"availability": "basic", "reminders": true, "public_link": true, "analytics": false, "integrations": false, "custom_branding": false, "priority_support": false, "api_access": false}'::jsonb),
   ('pro', 'Pro', 12, 120, 10, 1000, 
-   '{"availability": "advanced", "reminders": true, "public_link": true, "analytics": true, "integrations": true, "custom_branding": true, "priority_support": false, "api_access": true}'::jsonb),
+   '{"availability": "advanced", "reminders": true, "public_link": true, "analytics": true, "integrations": true, "custom_branding": false, "priority_support": false, "api_access": true}'::jsonb),
   ('business', 'Business', 24, 240, -1, -1, 
    '{"availability": "advanced", "reminders": true, "public_link": true, "analytics": true, "integrations": true, "custom_branding": true, "priority_support": true, "api_access": true}'::jsonb)
 ON CONFLICT (name) DO UPDATE SET

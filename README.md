@@ -24,8 +24,8 @@ BookAgreed is a modern scheduling platform that makes it easy to book meetings a
 
 ### Subscription Plans
 - **Free**: 1 event type, 100 bookings/month, basic features
-- **Pro**: 10 event types, 1,000 bookings/month, analytics, integrations, custom branding
-- **Business**: Unlimited event types and bookings, priority support, full API access
+- **Pro**: 10 event types, 1,000 bookings/month, analytics, integrations, API access
+- **Business**: Unlimited event types and bookings, custom branding, priority support, full API access
 
 ### Technical Features
 - **Mobile Responsive**: Optimized for all device sizes with hamburger menu

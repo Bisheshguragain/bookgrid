@@ -129,9 +129,8 @@ export function Pricing() {
       features.push('Email reminders');
       features.push('Public booking link');
       features.push('Analytics dashboard');
-      features.push('Priority email support');
-      features.push('Custom branding');
-      features.push('Advanced reminders');
+      features.push('Calendar integrations');
+      features.push('API access');
       features.push('1,000 bookings/month');
     } else if (plan.name === 'business') {
       features.push('Unlimited event types');
