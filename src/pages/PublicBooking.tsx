@@ -429,7 +429,7 @@ export function PublicBooking() {
                   </div>
 
                   <button
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate('/')}
                     className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
                   >
                     Done
