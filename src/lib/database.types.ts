@@ -539,6 +539,24 @@ export interface UserProfileType {
   role: UserRole
   account_status: AccountStatus
   last_active_at: string | null
+  // Currency preference
+  currency: string
+  // Google Calendar Integration
+  google_calendar_connected: boolean
+  google_calendar_email: string | null
+  google_calendar_refresh_token: string | null
+  google_calendar_access_token: string | null
+  google_calendar_token_expiry: string | null
+  // Outlook Calendar Integration
+  outlook_calendar_connected: boolean
+  outlook_calendar_email: string | null
+  outlook_calendar_refresh_token: string | null
+  outlook_calendar_access_token: string | null
+  outlook_calendar_token_expiry: string | null
+  // Calendar Sync Settings
+  calendar_auto_sync: boolean
+  calendar_send_invites: boolean
+  calendar_two_way_sync: boolean
 }
 
 export interface EventTypeRecord {
