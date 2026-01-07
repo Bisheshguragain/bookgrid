@@ -252,7 +252,7 @@ export function PublicBooking() {
           <h1 className="text-xl font-bold text-gray-900 mb-2">Error</h1>
           <p className="text-gray-600">{error}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             className="mt-4 w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
           >
             Go Back
@@ -278,7 +278,7 @@ export function PublicBooking() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             className="text-primary-600 hover:text-primary-700 text-sm font-medium mb-4"
           >
             ← Back
@@ -429,7 +429,7 @@ export function PublicBooking() {
                   </div>
 
                   <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate(-1)}
                     className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
                   >
                     Done

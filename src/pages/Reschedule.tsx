@@ -147,7 +147,7 @@ export function Reschedule() {
           <h1 className="text-xl font-bold text-gray-900 mb-2">Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
           >
             Go Home
@@ -273,7 +273,7 @@ export function Reschedule() {
                   </div>
 
                   <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate(-1)}
                     className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
                   >
                     Done
