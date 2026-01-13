@@ -129,7 +129,7 @@ export function Cancel() {
           <h1 className="text-xl font-bold text-gray-900 mb-2">Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
           >
             Go Home
@@ -187,7 +187,7 @@ export function Cancel() {
             </div>
 
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
               className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
             >
               Done
@@ -271,7 +271,7 @@ export function Cancel() {
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate('/')}
                   className="flex-1 py-2 px-4 rounded-lg border-2 border-gray-300 text-gray-900 font-medium hover:border-gray-400 transition-colors"
                   disabled={cancelLoading}
                 >

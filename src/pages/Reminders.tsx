@@ -3,12 +3,51 @@ import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { formatDateTime } from '../utils/datetime';
 
+interface ReminderTemplate {
+  id: string;
+  offset_minutes: number;
+  label: string;
+  message_template: string;
+  applies_to: 'all' | 'specific';
+}
+
 export function Reminders() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'sent' | 'failed'>('all');
   const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [autoRemindersEnabled, setAutoRemindersEnabled] = useState(true);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [showNewReminderForm, setShowNewReminderForm] = useState(false);
 
   const { user, profile } = useAuthStore();
+
+  // Default reminder templates
+  const [reminderTemplates] = useState<ReminderTemplate[]>([
+    {
+      id: '1',
+      offset_minutes: 1440, // 24 hours
+      label: '24 hours before',
+      message_template: 'Hi {{client_name}}, this is a reminder for your upcoming appointment: {{event_title}} on {{appointment_date}} at {{appointment_time}}. We look forward to seeing you!',
+      applies_to: 'all'
+    },
+    {
+      id: '2',
+      offset_minutes: 60, // 1 hour
+      label: '1 hour before',
+      message_template: 'Hi {{client_name}}, your appointment starts in 1 hour! Event: {{event_title}} at {{appointment_time}}.',
+      applies_to: 'all'
+    }
+  ]);
+
+  // Load user's auto reminders setting
+  useEffect(() => {
+    const loadUserSettings = async () => {
+      if (user && profile) {
+        setAutoRemindersEnabled(profile.auto_reminders_enabled ?? true);
+      }
+    };
+    loadUserSettings();
+  }, [user, profile]);
 
   // Load reminders with booking details
   const loadReminders = async () => {
@@ -83,6 +122,31 @@ export function Reminders() {
     alert(`Processed ${pendingReminders.length} reminders`);
   };
 
+  // Toggle auto reminders
+  const handleToggleAutoReminders = async () => {
+    if (!user) return;
+    
+    setIsSavingSettings(true);
+    try {
+      const newValue = !autoRemindersEnabled;
+      
+      const { error } = await supabase
+        .from('users_profile')
+        .update({ auto_reminders_enabled: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      setAutoRemindersEnabled(newValue);
+      alert(`Auto reminders ${newValue ? 'enabled' : 'disabled'} successfully!`);
+    } catch (error) {
+      console.error('Error updating auto reminders setting:', error);
+      alert('Failed to update setting. Please try again.');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
   const filteredReminders = reminders.filter(r => {
     if (filter === 'all') return true;
     return r.status === filter;
@@ -121,6 +185,112 @@ export function Reminders() {
           >
             ⚡ Process Pending
           </button>
+        </div>
+      </div>
+
+      {/* Auto Reminders Toggle Section */}
+      <div className="bg-white rounded-xl shadow-lg border-2 border-purple-100 p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">⚙️ Auto Reminders Settings</h2>
+            <p className="text-gray-600">
+              Set up automatic appointment reminders to notify clients before their appointments
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-700">
+              {autoRemindersEnabled ? '✅ Enabled' : '❌ Disabled'}
+            </span>
+            <button
+              onClick={handleToggleAutoReminders}
+              disabled={isSavingSettings}
+              className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 ${
+                autoRemindersEnabled ? 'bg-purple-600' : 'bg-gray-300'
+              } ${isSavingSettings ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                  autoRemindersEnabled ? 'translate-x-9' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Reminder Templates Section */}
+      <div className="bg-white rounded-xl shadow-lg border-2 border-purple-100 p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">📋 How Reminders Work</h2>
+            <p className="text-gray-600 text-sm">
+              Create multiple reminders to notify clients before appointments (e.g., 24 hours, 1 hour before) and follow-up reminders after appointments for feedback. Each reminder can be customized per event.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowNewReminderForm(true)}
+            className="px-5 py-2.5 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-all shadow-md whitespace-nowrap"
+          >
+            + New Reminder
+          </button>
+        </div>
+
+        {/* Reminder Templates List */}
+        <div className="space-y-4">
+          {reminderTemplates.map((template) => (
+            <div
+              key={template.id}
+              className="border-2 border-purple-100 rounded-xl p-5 hover:border-purple-300 transition-all"
+            >
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="px-3 py-1 bg-purple-100 text-purple-700 font-bold text-sm rounded-lg">
+                      {template.label}
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 font-medium text-sm rounded-lg">
+                      EMAIL
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      Applies to: <span className="font-semibold">All Events</span>
+                    </span>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {template.message_template}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 text-purple-600 hover:text-purple-700 font-medium text-sm border border-purple-300 rounded-lg hover:bg-purple-50 transition-all">
+                    ✏️ Edit
+                  </button>
+                  <button className="px-4 py-2 text-red-600 hover:text-red-700 font-medium text-sm border border-red-300 rounded-lg hover:bg-red-50 transition-all">
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Template Variables Help */}
+        <div className="mt-6 bg-gradient-to-br from-purple-50 to-blue-50 p-5 rounded-xl border-2 border-purple-200">
+          <h3 className="text-sm font-bold text-purple-900 mb-2">💡 Available Template Variables:</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div className="bg-white px-3 py-2 rounded-lg border border-purple-200">
+              <code className="text-purple-700 font-mono">{'{{client_name}}'}</code>
+            </div>
+            <div className="bg-white px-3 py-2 rounded-lg border border-purple-200">
+              <code className="text-purple-700 font-mono">{'{{event_title}}'}</code>
+            </div>
+            <div className="bg-white px-3 py-2 rounded-lg border border-purple-200">
+              <code className="text-purple-700 font-mono">{'{{appointment_date}}'}</code>
+            </div>
+            <div className="bg-white px-3 py-2 rounded-lg border border-purple-200">
+              <code className="text-purple-700 font-mono">{'{{appointment_time}}'}</code>
+            </div>
+          </div>
         </div>
       </div>
 

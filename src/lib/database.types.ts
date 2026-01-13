@@ -125,6 +125,7 @@ export interface Database {
           avatar_url: string | null
           default_meeting_duration: number
           company_name: string | null // Optional company name
+          auto_reminders_enabled: boolean // Auto reminders toggle
           subscription_plan: 'free' | 'pro' | 'business'
           subscription_status: 'active' | 'cancelled' | 'expired' | 'trial'
           subscription_start_date: string
@@ -151,6 +152,7 @@ export interface Database {
           avatar_url?: string | null
           default_meeting_duration?: number
           company_name?: string | null // Optional company name
+          auto_reminders_enabled?: boolean // Auto reminders toggle
           subscription_plan?: 'free' | 'pro' | 'business'
           subscription_status?: 'active' | 'cancelled' | 'expired' | 'trial'
           subscription_start_date?: string
@@ -177,6 +179,7 @@ export interface Database {
           avatar_url?: string | null
           default_meeting_duration?: number
           company_name?: string | null // Optional company name
+          auto_reminders_enabled?: boolean // Auto reminders toggle
           subscription_plan?: 'free' | 'pro' | 'business'
           subscription_status?: 'active' | 'cancelled' | 'expired' | 'trial'
           subscription_start_date?: string
@@ -541,6 +544,8 @@ export interface UserProfileType {
   last_active_at: string | null
   // Currency preference
   currency: string
+  // Reminders settings
+  auto_reminders_enabled: boolean
 }
 
 export interface EventTypeRecord {
