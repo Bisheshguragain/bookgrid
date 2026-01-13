@@ -12,13 +12,10 @@ import {
   type SubscriptionInfo 
 } from '../services/subscriptionService';
 import { 
-  getCalendarSettings, 
-  updateCalendarSettings,
+  getCurrencySettings, 
   updateCurrency,
-  disconnectGoogleCalendar,
-  disconnectOutlookCalendar,
-  type CalendarSettings
-} from '../services/calendarService';
+  type CurrencySettings
+} from '../services/currencyService';
 import { CURRENCIES, type CurrencyCode } from '../utils/currency';
 
 export function Settings() {
@@ -44,11 +41,11 @@ export function Settings() {
   const [selectedDowngradePlan, setSelectedDowngradePlan] = useState<'free' | 'pro' | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Calendar & Currency state
-  const [calendarSettings, setCalendarSettings] = useState<CalendarSettings | null>(null);
-  const [calendarLoading, setCalendarLoading] = useState(true);
-  const [calendarAction, setCalendarAction] = useState<string | null>(null);
-  const [calendarMessage, setCalendarMessage] = useState('');
+  // Currency state
+  const [currencySettings, setCurrencySettings] = useState<CurrencySettings | null>(null);
+  const [currencyLoading, setCurrencyLoading] = useState(true);
+  const [currencyAction, setCurrencyAction] = useState<string | null>(null);
+  const [currencyMessage, setCurrencyMessage] = useState('');
 
   const { profile, updateProfile, user } = useAuthStore();
 
@@ -77,17 +74,17 @@ export function Settings() {
     loadSubscription();
   }, [user]);
 
-  // Load calendar settings
+  // Load currency settings
   useEffect(() => {
-    const loadCalendarSettings = async () => {
+    const loadCurrencySettings = async () => {
       if (user) {
-        setCalendarLoading(true);
-        const data = await getCalendarSettings(user.id);
-        setCalendarSettings(data);
-        setCalendarLoading(false);
+        setCurrencyLoading(true);
+        const data = await getCurrencySettings(user.id);
+        setCurrencySettings(data);
+        setCurrencyLoading(false);
       }
     };
-    loadCalendarSettings();
+    loadCurrencySettings();
   }, [user]);
 
   const validateForm = () => {
@@ -261,107 +258,26 @@ export function Settings() {
     }
   };
 
-  // Calendar & Currency handlers
+  // Currency handlers
   const handleCurrencyChange = async (newCurrency: CurrencyCode) => {
     if (!user) return;
     
-    setCalendarAction('currency');
-    setCalendarMessage('');
+    setCurrencyAction('currency');
+    setCurrencyMessage('');
     try {
       const { error } = await updateCurrency(user.id, newCurrency);
       if (error) throw error;
       
       // Update local state
-      setCalendarSettings(prev => prev ? { ...prev, currency: newCurrency } : null);
-      setCalendarMessage('Currency updated successfully');
-      setTimeout(() => setCalendarMessage(''), 3000);
+      setCurrencySettings(prev => prev ? { ...prev, currency: newCurrency } : null);
+      setCurrencyMessage('Currency updated successfully');
+      setTimeout(() => setCurrencyMessage(''), 3000);
     } catch (error) {
-      setCalendarMessage('Failed to update currency');
-      setTimeout(() => setCalendarMessage(''), 3000);
+      setCurrencyMessage('Failed to update currency');
+      setTimeout(() => setCurrencyMessage(''), 3000);
     } finally {
-      setCalendarAction(null);
+      setCurrencyAction(null);
     }
-  };
-
-  const handleToggleCalendarSetting = async (
-    setting: 'calendar_auto_sync' | 'calendar_send_invites' | 'calendar_two_way_sync',
-    value: boolean
-  ) => {
-    if (!user) return;
-    
-    setCalendarAction(setting);
-    try {
-      const { error } = await updateCalendarSettings(user.id, { [setting]: value });
-      if (error) throw error;
-      
-      // Update local state
-      setCalendarSettings(prev => prev ? { ...prev, [setting]: value } : null);
-      setCalendarMessage('Settings updated successfully');
-      setTimeout(() => setCalendarMessage(''), 3000);
-    } catch (error) {
-      setCalendarMessage('Failed to update settings');
-      setTimeout(() => setCalendarMessage(''), 3000);
-    } finally {
-      setCalendarAction(null);
-    }
-  };
-
-  const handleDisconnectGoogle = async () => {
-    if (!user) return;
-    if (!confirm('Are you sure you want to disconnect Google Calendar? Bookings will no longer sync.')) return;
-    
-    setCalendarAction('disconnect_google');
-    try {
-      const { error } = await disconnectGoogleCalendar(user.id);
-      if (error) throw error;
-      
-      // Update local state
-      setCalendarSettings(prev => prev ? {
-        ...prev,
-        google_calendar_connected: false,
-        google_calendar_email: null
-      } : null);
-      setCalendarMessage('Google Calendar disconnected');
-      setTimeout(() => setCalendarMessage(''), 3000);
-    } catch (error) {
-      setCalendarMessage('Failed to disconnect Google Calendar');
-      setTimeout(() => setCalendarMessage(''), 3000);
-    } finally {
-      setCalendarAction(null);
-    }
-  };
-
-  const handleDisconnectOutlook = async () => {
-    if (!user) return;
-    if (!confirm('Are you sure you want to disconnect Outlook Calendar? Bookings will no longer sync.')) return;
-    
-    setCalendarAction('disconnect_outlook');
-    try {
-      const { error } = await disconnectOutlookCalendar(user.id);
-      if (error) throw error;
-      
-      // Update local state
-      setCalendarSettings(prev => prev ? {
-        ...prev,
-        outlook_calendar_connected: false,
-        outlook_calendar_email: null
-      } : null);
-      setCalendarMessage('Outlook Calendar disconnected');
-      setTimeout(() => setCalendarMessage(''), 3000);
-    } catch (error) {
-      setCalendarMessage('Failed to disconnect Outlook Calendar');
-      setTimeout(() => setCalendarMessage(''), 3000);
-    } finally {
-      setCalendarAction(null);
-    }
-  };
-
-  const handleConnectGoogle = () => {
-    alert('Google Calendar OAuth integration is not yet implemented.\n\nPlease see CALENDAR_INTEGRATION_GUIDE.md for implementation details.\n\nThis requires:\n1. OAuth 2.0 server-side endpoints\n2. Secure token encryption\n3. Google Cloud Console project setup');
-  };
-
-  const handleConnectOutlook = () => {
-    alert('Outlook Calendar OAuth integration is not yet implemented.\n\nPlease see CALENDAR_INTEGRATION_GUIDE.md for implementation details.\n\nThis requires:\n1. OAuth 2.0 server-side endpoints\n2. Secure token encryption\n3. Microsoft Azure app registration');
   };
 
   const timeZones = getTimeZones();
@@ -536,266 +452,26 @@ export function Settings() {
         </form>
       </div>
 
-      {/* Calendar Integrations */}
-      <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-green-100">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">📅 Calendar Integrations</h2>
-            <p className="text-sm text-gray-600 mt-1">Manage your calendar integrations and preferences</p>
-          </div>
-        </div>
-
-        {calendarMessage && (
-          <div className="mb-6 rounded-xl bg-blue-50 border-2 border-blue-200 p-4">
-            <div className="text-sm text-blue-800 font-medium flex items-center gap-2">
-              <span>✅</span> {calendarMessage}
-            </div>
-          </div>
-        )}
-
-        {calendarLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          </div>
-        ) : calendarSettings ? (
-          <div className="space-y-6">
-            {/* Google Calendar */}
-            <div className="border-2 border-gray-200 rounded-xl p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">📆</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Google Calendar</h3>
-                    <p className="text-sm text-gray-600">Sync bookings with your Google Calendar automatically</p>
-                  </div>
-                </div>
-                {calendarSettings.google_calendar_connected ? (
-                  <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-full">
-                    Connected
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-semibold rounded-full">
-                    Not Connected
-                  </span>
-                )}
-              </div>
-
-              {calendarSettings.google_calendar_connected ? (
-                <div className="space-y-4">
-                  <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-                    <p className="text-sm font-semibold text-green-800 mb-1">Calendar Connected</p>
-                    <p className="text-sm text-green-700">
-                      Your bookings will be synced to: <strong>{calendarSettings.google_calendar_email}</strong>
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleDisconnectGoogle}
-                    disabled={calendarAction === 'disconnect_google'}
-                    className="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-700 border-2 border-red-200 hover:border-red-300 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {calendarAction === 'disconnect_google' ? '⏳ Disconnecting...' : 'Disconnect Google Calendar'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleConnectGoogle}
-                  className="w-full px-4 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Connect Google Calendar
-                </button>
-              )}
-            </div>
-
-            {/* Outlook Calendar */}
-            <div className="border-2 border-gray-200 rounded-xl p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">📅</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Outlook Calendar</h3>
-                    <p className="text-sm text-gray-600">Sync bookings with Microsoft Outlook Calendar</p>
-                  </div>
-                </div>
-                {calendarSettings.outlook_calendar_connected ? (
-                  <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-full">
-                    Connected
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-semibold rounded-full">
-                    Not Connected
-                  </span>
-                )}
-              </div>
-
-              {calendarSettings.outlook_calendar_connected ? (
-                <div className="space-y-4">
-                  <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-                    <p className="text-sm font-semibold text-green-800 mb-1">Calendar Connected</p>
-                    <p className="text-sm text-green-700">
-                      Your bookings will be synced to: <strong>{calendarSettings.outlook_calendar_email}</strong>
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleDisconnectOutlook}
-                    disabled={calendarAction === 'disconnect_outlook'}
-                    className="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-700 border-2 border-red-200 hover:border-red-300 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    {calendarAction === 'disconnect_outlook' ? '⏳ Disconnecting...' : 'Disconnect Outlook Calendar'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={handleConnectOutlook}
-                  className="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Connect Outlook Calendar
-                </button>
-              )}
-            </div>
-
-            {/* Calendar Sync Settings - Only show if at least one calendar is connected */}
-            {(calendarSettings.google_calendar_connected || calendarSettings.outlook_calendar_connected) && (
-              <div className="border-2 border-purple-200 rounded-xl p-6 bg-purple-50">
-                <h3 className="font-bold text-gray-900 mb-4">🔄 Sync Settings</h3>
-                <div className="space-y-4">
-                  {/* Auto-sync bookings */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-900">Auto-sync bookings</p>
-                      <p className="text-sm text-gray-600">Automatically create calendar events for new bookings</p>
-                    </div>
-                    <button
-                      onClick={() => handleToggleCalendarSetting('calendar_auto_sync', !calendarSettings.calendar_auto_sync)}
-                      disabled={calendarAction === 'calendar_auto_sync'}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        calendarSettings.calendar_auto_sync ? 'bg-green-600' : 'bg-gray-300'
-                      } disabled:opacity-50`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          calendarSettings.calendar_auto_sync ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Send calendar invites */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-900">Send calendar invites</p>
-                      <p className="text-sm text-gray-600">Send .ics file to clients for their calendars</p>
-                    </div>
-                    <button
-                      onClick={() => handleToggleCalendarSetting('calendar_send_invites', !calendarSettings.calendar_send_invites)}
-                      disabled={calendarAction === 'calendar_send_invites'}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        calendarSettings.calendar_send_invites ? 'bg-green-600' : 'bg-gray-300'
-                      } disabled:opacity-50`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          calendarSettings.calendar_send_invites ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-
-                  {/* Two-way sync */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <p className="font-semibold text-gray-900 flex items-center gap-2">
-                          Two-way sync
-                          <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-bold rounded">NEW</span>
-                        </p>
-                        <p className="text-sm text-gray-600">Block booking times when you're busy in your calendar</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleToggleCalendarSetting('calendar_two_way_sync', !calendarSettings.calendar_two_way_sync)}
-                      disabled={calendarAction === 'calendar_two_way_sync'}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        calendarSettings.calendar_two_way_sync ? 'bg-green-600' : 'bg-gray-300'
-                      } disabled:opacity-50`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          calendarSettings.calendar_two_way_sync ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* How Calendar Sync Works */}
-            <div className="border-2 border-blue-200 rounded-xl p-6 bg-blue-50">
-              <h3 className="font-bold text-gray-900 mb-4">ℹ️ How Calendar Sync Works</h3>
-              <p className="text-sm text-gray-600 mb-4">Understand how your bookings sync with your calendar</p>
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    1
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Automatic Sync</p>
-                    <p className="text-sm text-gray-600">When a client books an appointment, it's automatically added to your connected calendar.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    2
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Client Invites</p>
-                    <p className="text-sm text-gray-600">If enabled, clients receive a calendar invite (.ics file) they can add to their own calendar.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    3
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Status Updates</p>
-                    <p className="text-sm text-gray-600">Cancellations and updates are automatically reflected in your calendar.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    ✓
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Two-Way Sync</p>
-                    <p className="text-sm text-gray-600">Your calendar busy times are automatically hidden from booking availability.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-600">
-            Failed to load calendar settings
-          </div>
-        )}
-      </div>
-
       {/* Currency & Pricing */}
       <div className="bg-white rounded-xl p-8 shadow-lg border-2 border-yellow-100">
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900">💰 Currency & Pricing</h2>
+          <h2 className="text-xl font-bold text-gray-900">� Currency & Pricing</h2>
           <p className="text-sm text-gray-600 mt-1">Set your preferred currency for pricing</p>
         </div>
 
-        {calendarLoading ? (
+        {currencyMessage && (
+          <div className="mb-6 rounded-xl bg-blue-50 border-2 border-blue-200 p-4">
+            <div className="text-sm text-blue-800 font-medium flex items-center gap-2">
+              <span>✅</span> {currencyMessage}
+            </div>
+          </div>
+        )}
+
+        {currencyLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600"></div>
           </div>
-        ) : calendarSettings ? (
+        ) : currencySettings ? (
           <div className="space-y-6">
             <div>
               <label htmlFor="currency" className="block text-sm font-semibold text-gray-900 mb-2">
@@ -803,9 +479,9 @@ export function Settings() {
               </label>
               <select
                 id="currency"
-                value={calendarSettings.currency}
+                value={currencySettings.currency}
                 onChange={(e) => handleCurrencyChange(e.target.value as CurrencyCode)}
-                disabled={calendarAction === 'currency'}
+                disabled={currencyAction === 'currency'}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all disabled:opacity-50"
               >
                 {CURRENCIES.map((currency) => (
@@ -822,7 +498,7 @@ export function Settings() {
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
               <p className="text-sm font-semibold text-yellow-800 mb-1">Current Selection</p>
               <p className="text-sm text-yellow-700">
-                {CURRENCIES.find(c => c.code === calendarSettings.currency)?.symbol} {CURRENCIES.find(c => c.code === calendarSettings.currency)?.name}
+                {CURRENCIES.find(c => c.code === currencySettings.currency)?.symbol} {CURRENCIES.find(c => c.code === currencySettings.currency)?.name}
               </p>
             </div>
           </div>

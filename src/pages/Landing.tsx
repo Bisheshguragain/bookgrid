@@ -220,20 +220,22 @@ export function Landing() {
                 <div 
                   key={index}
                   tabIndex={0}
-                  className="group relative bg-gradient-to-br from-purple-100 to-purple-200 p-8 rounded-2xl border-2 border-purple-200 hover:border-primary-600 focus:border-primary-700 hover:shadow-2xl focus:shadow-2xl transition-all duration-300 outline-none cursor-pointer feature-box w-full max-w-xs mx-auto"
+                  className="group relative bg-gradient-to-br from-purple-50 via-white to-blue-50 p-8 rounded-2xl border-2 border-purple-100 hover:border-primary-500 focus:border-primary-600 hover:shadow-xl focus:shadow-xl transition-all duration-300 outline-none cursor-pointer feature-box w-full max-w-xs mx-auto"
                 >
                   {/* Icon container */}
-                  <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center mb-6 group-hover:scale-110 group-focus:scale-110 transition-transform duration-300 border-2 border-purple-200 group-hover:border-primary-600 group-focus:border-primary-700 mx-auto">
-                    <Icon className="h-8 w-8 text-primary-600" />
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center mb-6 group-hover:scale-110 group-focus:scale-110 transition-transform duration-300 shadow-md mx-auto">
+                    <Icon className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-primary-700 mb-3 group-hover:text-primary-800 group-focus:text-primary-900 transition-colors text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-700 group-focus:text-primary-800 transition-colors text-center">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-700 leading-relaxed group-hover:text-gray-900 group-focus:text-gray-900 font-medium text-center">
+                  <p className="text-gray-600 leading-relaxed group-hover:text-gray-800 group-focus:text-gray-800 font-medium text-center">
                     {feature.description}
                   </p>
                   {/* Decorative accent */}
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-primary-100 opacity-0 group-hover:opacity-30 group-focus:opacity-40 transition-opacity duration-300 rounded-bl-3xl -z-10"></div>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-primary-200 to-transparent opacity-0 group-hover:opacity-20 group-focus:opacity-25 transition-opacity duration-300 rounded-bl-3xl -z-10"></div>
+                  {/* Bottom left accent */}
+                  <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-100 to-transparent opacity-0 group-hover:opacity-20 group-focus:opacity-25 transition-opacity duration-300 rounded-tr-3xl -z-10"></div>
                 </div>
               );
             })}
@@ -243,9 +245,10 @@ export function Landing() {
       <style>
       {`
       .feature-box:focus, .feature-box:hover {
-        box-shadow: 0 8px 32px 0 rgba(128, 90, 213, 0.25), 0 1.5px 6px 0 rgba(128, 90, 213, 0.10);
+        box-shadow: 0 10px 40px 0 rgba(139, 92, 246, 0.15), 0 2px 8px 0 rgba(139, 92, 246, 0.08);
         border-width: 2px;
-        border-color: #7c3aed;
+        border-color: #8b5cf6;
+        background: linear-gradient(135deg, #faf5ff 0%, #ffffff 50%, #eff6ff 100%);
       }
       `}
       </style>
@@ -538,11 +541,7 @@ export function Landing() {
                 </li>
                 <li className="flex items-start text-gray-700">
                   <CheckCircleIcon className="h-5 w-5 text-primary-600 mr-3 flex-shrink-0 mt-0.5" />
-                  <span>Calendar integrations</span>
-                </li>
-                <li className="flex items-start text-gray-700">
-                  <CheckCircleIcon className="h-5 w-5 text-primary-600 mr-3 flex-shrink-0 mt-0.5" />
-                  <span>API access</span>
+                  <span>Priority support</span>
                 </li>
               </ul>
               <Link to="/signup" className="block w-full py-3 rounded-lg font-semibold transition-colors bg-primary-600 hover:bg-primary-700 text-white text-center">
