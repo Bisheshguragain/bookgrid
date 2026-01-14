@@ -17,7 +17,6 @@ export function Reminders() {
   const [loading, setLoading] = useState(true);
   const [autoRemindersEnabled, setAutoRemindersEnabled] = useState(true);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
-  const [showNewReminderForm, setShowNewReminderForm] = useState(false);
 
   const { user, profile } = useAuthStore();
 
@@ -220,19 +219,11 @@ export function Reminders() {
 
       {/* Reminder Templates Section */}
       <div className="bg-white rounded-xl shadow-lg border-2 border-purple-100 p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">📋 How Reminders Work</h2>
-            <p className="text-gray-600 text-sm">
-              Create multiple reminders to notify clients before appointments (e.g., 24 hours, 1 hour before) and follow-up reminders after appointments for feedback. Each reminder can be customized per event.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowNewReminderForm(true)}
-            className="px-5 py-2.5 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-all shadow-md whitespace-nowrap"
-          >
-            + New Reminder
-          </button>
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-1">📋 How Reminders Work</h2>
+          <p className="text-gray-600 text-sm">
+            Create multiple reminders to notify clients before appointments (e.g., 24 hours, 1 hour before) and follow-up reminders after appointments for feedback. Each reminder can be customized per event.
+          </p>
         </div>
 
         {/* Reminder Templates List */}
