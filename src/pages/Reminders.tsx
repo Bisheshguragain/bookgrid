@@ -134,13 +134,20 @@ export function Reminders() {
         .update({ auto_reminders_enabled: newValue })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        if (error.message.includes('column') && error.message.includes('does not exist')) {
+          alert('⚠️ Database migration required!\n\nThe auto_reminders_enabled column needs to be added to the database.\n\nPlease run the migration file:\nmigrations/add_auto_reminders_settings.sql\n\nIn your Supabase SQL Editor.');
+        } else {
+          alert('Failed to update setting. Please try again.\n\nError: ' + error.message);
+        }
+        throw error;
+      }
       
       setAutoRemindersEnabled(newValue);
       alert(`Auto reminders ${newValue ? 'enabled' : 'disabled'} successfully!`);
     } catch (error) {
       console.error('Error updating auto reminders setting:', error);
-      alert('Failed to update setting. Please try again.');
     } finally {
       setIsSavingSettings(false);
     }
