@@ -24,10 +24,9 @@ interface EmailOptions {
 const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY || '';
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-// Universal sender email - all emails (bookings, reminders, cancellations) come from this address
-const EMAIL_FROM = import.meta.env.VITE_EMAIL_FROM || 'book@bookagreed.com';
+const EMAIL_FROM = import.meta.env.VITE_EMAIL_FROM || 'noreply@bookagreed.com';
 const EMAIL_FROM_NAME = import.meta.env.VITE_EMAIL_FROM_NAME || 'BookAgreed';
-const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'book@bookagreed.com';
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || 'support@bookagreed.com';
 const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:5173';
 const APP_NAME = import.meta.env.VITE_APP_NAME || 'BookAgreed';
 
